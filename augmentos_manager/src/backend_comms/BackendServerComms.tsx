@@ -38,7 +38,7 @@ export default class BackendServerComms {
 
   public setCoreToken(token: string | null): void {
     this.coreToken = token;
-    log.core.info(`Core token ${token ? 'set' : 'cleared'}`);
+    log.core.info(`${this.TAG}: Core token ${token ? 'set' : 'cleared'}`);
   }
 
   public getCoreToken(): string | null {
@@ -71,11 +71,11 @@ export default class BackendServerComms {
           callback.onFailure(-1);
         }
       } else {
-        log.core.error(`Error - ${response.statusText}`);
+        log.core.error(`${this.TAG}: Error - ${response.statusText}`);
         callback.onFailure(response.status);
       }
     } catch (error: any) {
-      log.core.error(`Network Error - ${error.message || error}`);
+      log.core.error(`${this.TAG}: Network Error -`, error.message || error);
       callback.onFailure(-1);
     }
   }
@@ -111,7 +111,7 @@ export default class BackendServerComms {
         throw new Error(`Error sending report: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`Error sending report - ${error.message || error}`);
+      log.core.error(`${this.TAG}: Error sending report -`, error.message || error);
       throw error;
     }
   }
@@ -128,10 +128,10 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.debug("GOT A RESPONSE!!!");
-        log.core.debug("\n\n");
-        log.core.debug(JSON.stringify(response.data));
-        log.core.debug("\n\n\n\n");
+        log.core.info("GOT A RESPONSE!!!")
+        log.core.info("\n\n");
+        log.core.info(JSON.stringify(response.data));
+        log.core.info("\n\n\n\n");
         // Store the token internally
         this.setCoreToken(response.data.coreToken);
         return response.data.coreToken;
@@ -238,9 +238,8 @@ export default class BackendServerComms {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      //log.core.error('Error starting app:', error.message || error);
-      //GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' })
-      GlobalEventEmitter.emit('SHOW_BANNER', { message: `Could not connect to ${packageName}`, type: "error" });
+      log.core.error('Error starting app:', error.message || error);
+      GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' });
       throw error;
     }
   }
@@ -350,7 +349,7 @@ export default class BackendServerComms {
         throw new Error(`Failed to generate webview token: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`Error generating webview token - ${error.message || error}`);
+      log.core.error(`${this.TAG}: Error generating webview token -`, error.message || error);
       // Consider more specific error handling based on response status if available
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(`Failed to generate webview token: ${error.response.data?.error || error.message}`);
@@ -387,7 +386,7 @@ export default class BackendServerComms {
         throw new Error(`Failed to generate hash: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`Error generating hash: ${error.message || error}`);
+      log.core.error(`${this.TAG}: Error generating hash:`, error.message || error);
       throw error;
     }
   }

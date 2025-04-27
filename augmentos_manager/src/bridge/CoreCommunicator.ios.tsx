@@ -5,7 +5,6 @@ import { INTENSE_LOGGING } from '../consts';
 import { isAugmentOsCoreInstalled, isLocationServicesEnabled as checkLocationServices, startExternalService } from './CoreServiceStarter';
 import { check, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import BleManager from 'react-native-ble-manager';
-import { log } from '../utils/logger';
 
 const { CoreCommsService, AOSModule } = NativeModules;
 const eventEmitter = new NativeEventEmitter(CoreCommsService);
@@ -16,29 +15,17 @@ export class CoreCommunicator extends EventEmitter {
   private validationInProgress: Promise<boolean | void> | null = null;
   private reconnectionTimer: NodeJS.Timeout | null = null;
   private isConnected: boolean = false;
-
+  
   // Utility methods for checking permissions and device capabilities
-  async checkBluetoothState(): Promise<boolean> {
-    try {
-      log.app.debug('Checking Bluetooth state...');
-      const state = await BleManager.checkState();
-      log.app.debug('Bluetooth state:', state);
-      return state === 'on';
-    } catch (error) {
-      log.app.error('Error checking Bluetooth state:', error);
-      return false;
-    }
-  }
-
   async isBluetoothEnabled(): Promise<boolean> {
     try {
-      log.app.debug('Checking Bluetooth state...');
+      console.log('Checking Bluetooth state...');
       await BleManager.start({ showAlert: false });
       const state = await BleManager.checkState();
-      log.app.debug('Bluetooth state:', state);
+      console.log('Bluetooth state:', state);
       return state === 'on';
     } catch (error) {
-      log.app.error('Error checking Bluetooth state:', error);
+      console.error('Error checking Bluetooth state:', error);
       return false;
     }
   }
@@ -54,17 +41,17 @@ export class CoreCommunicator extends EventEmitter {
       }
       return false;
     } catch (error) {
-      log.app.error('Error checking location permission:', error);
+      console.error('Error checking location permission:', error);
       return false;
     }
   }
-
+  
   async isLocationServicesEnabled(): Promise<boolean> {
     try {
       if (Platform.OS === 'android') {
         // Use our native module to check if location services are enabled
         const locationServicesEnabled = await checkLocationServices();
-        log.app.debug('Location services enabled (native check):', locationServicesEnabled);
+        console.log('Location services enabled (native check):', locationServicesEnabled);
         return locationServicesEnabled;
       } else if (Platform.OS === 'ios') {
         // iOS doesn't require location for BLE scanning since iOS 13
@@ -72,60 +59,60 @@ export class CoreCommunicator extends EventEmitter {
       }
       return true;
     } catch (error) {
-      log.app.error('Error checking if location services are enabled:', error);
+      console.error('Error checking if location services are enabled:', error);
       return false;
     }
   }
 
-  async checkConnectivityRequirements(): Promise<{ isReady: boolean, message?: string }> {
-    log.app.debug('Checking connectivity requirements');
-
+  async checkConnectivityRequirements(): Promise<{isReady: boolean, message?: string}> {
+    console.log('Checking connectivity requirements');
+    
     // On iOS, we'll assume Bluetooth is available initially to avoid premature permissions
     // The actual check will happen during the scanning process
     if (Platform.OS === 'ios') {
       return { isReady: true };
     }
-
+    
     // For Android, still check Bluetooth
     const isBtEnabled = await this.isBluetoothEnabled();
-    log.app.debug('Is Bluetooth enabled:', isBtEnabled);
+    console.log('Is Bluetooth enabled:', isBtEnabled);
     if (!isBtEnabled) {
-      log.app.debug('Bluetooth is disabled, showing error');
-      return {
-        isReady: false,
-        message: 'Bluetooth is required to connect to glasses. Please enable Bluetooth and try again.'
+      console.log('Bluetooth is disabled, showing error');
+      return { 
+        isReady: false, 
+        message: 'Bluetooth is required to connect to glasses. Please enable Bluetooth and try again.' 
       };
     }
-
+    
     // Only check location on Android
     if (Platform.OS === 'android') {
       // First check if location permission is granted
       const isLocationPermissionGranted = await this.isLocationPermissionGranted();
-      log.app.info('Is Location permission granted:', isLocationPermissionGranted);
+      console.log('Is Location permission granted:', isLocationPermissionGranted);
       if (!isLocationPermissionGranted) {
-        log.app.info('Location permission missing, showing error');
+        console.log('Location permission missing, showing error');
         return {
           isReady: false,
           message: 'Location permission is required to scan for glasses on Android. Please grant location permission and try again.'
         };
       }
-
+      
       // Then check if location services are enabled
       const isLocationServicesEnabled = await this.isLocationServicesEnabled();
-      log.app.info('Are Location services enabled:', isLocationServicesEnabled);
+      console.log('Are Location services enabled:', isLocationServicesEnabled);
       if (!isLocationServicesEnabled) {
-        log.app.info('Location services disabled, showing error');
+        console.log('Location services disabled, showing error');
         return {
           isReady: false,
           message: 'Location services are disabled. Please enable location services in your device settings and try again.'
         };
       }
     }
-
-    log.app.info('All requirements met');
+    
+    console.log('All requirements met');
     return { isReady: true };
   }
-
+  
   // Private constructor to enforce singleton pattern
   private constructor() {
     super();
@@ -149,7 +136,7 @@ export class CoreCommunicator extends EventEmitter {
     try {
       await BleManager.start({ showAlert: false });
     } catch (error) {
-      log.app.warn('Failed to initialize BleManager:', error);
+      console.warn('Failed to initialize BleManager:', error);
     }
 
     // AOSModule.sendCommand(JSON.stringify({ "command": "request_status" }));
@@ -161,22 +148,22 @@ export class CoreCommunicator extends EventEmitter {
     //   AOSModule.sendCommand(JSON.stringify({ "command": "connect_wearable" }));
     // }, 10000);
 
-
+    
     // Start the Core service if it's not already running
     // TODO: ios (this isn't actually needed I don't think)
     // if (!(await CoreCommsService.isServiceRunning())) {
     //   CoreCommsService.startService();
     // }
-
+    
     // Start the external service
     startExternalService();
-
+    
     // Initialize message event listener
     this.initializeMessageEventListener();
-
+    
     // Start periodic status checks
     this.startStatusPolling();
-
+    
     // Request initial status
     this.sendRequestStatus();
   }
@@ -196,8 +183,8 @@ export class CoreCommunicator extends EventEmitter {
       'CoreMessageEvent',
       this.handleCoreMessage.bind(this)
     );
-
-    log.app.info('Core message event listener initialized');
+    
+    console.log('Core message event listener initialized');
   }
 
   /**
@@ -205,17 +192,17 @@ export class CoreCommunicator extends EventEmitter {
    */
   private handleCoreMessage(jsonString: string) {
     if (INTENSE_LOGGING) {
-      log.app.debug('Received message from core:', jsonString);
+      console.log('Received message from core:', jsonString);
     }
-
+    
     try {
       const data = JSON.parse(jsonString);
       this.isConnected = true;
       this.emit('dataReceived', data);
       this.parseDataFromCore(data);
     } catch (e) {
-      log.app.error('Failed to parse JSON from core message:', e);
-      log.app.info(jsonString);
+      console.error('Failed to parse JSON from core message:', e);
+      console.log(jsonString);
     }
   }
 
@@ -224,7 +211,7 @@ export class CoreCommunicator extends EventEmitter {
    */
   private parseDataFromCore(data: any) {
     if (!data) return;
-
+    
     try {
       if ('status' in data) {
         this.emit('statusUpdateReceived', data);
@@ -233,32 +220,32 @@ export class CoreCommunicator extends EventEmitter {
       } else if ('ping' in data) {
         // Heartbeat response - nothing to do
       } else if ('notify_manager' in data) {
-        GlobalEventEmitter.emit('SHOW_BANNER', {
-          message: data.notify_manager.message,
-          type: data.notify_manager.type
+        GlobalEventEmitter.emit('SHOW_BANNER', { 
+          message: data.notify_manager.message, 
+          type: data.notify_manager.type 
         });
       } else if ('compatible_glasses_search_result' in data) {
-        GlobalEventEmitter.emit('COMPATIBLE_GLASSES_SEARCH_RESULT', {
-          modelName: data.compatible_glasses_search_result.model_name,
-          deviceName: data.compatible_glasses_search_result.device_name
+        GlobalEventEmitter.emit('COMPATIBLE_GLASSES_SEARCH_RESULT', { 
+          modelName: data.compatible_glasses_search_result.model_name, 
+          deviceName: data.compatible_glasses_search_result.device_name 
         });
       } else if ('compatible_glasses_search_stop' in data) {
-        GlobalEventEmitter.emit('COMPATIBLE_GLASSES_SEARCH_STOP', {
-          modelName: data.compatible_glasses_search_stop.model_name
+        GlobalEventEmitter.emit('COMPATIBLE_GLASSES_SEARCH_STOP', { 
+          modelName: data.compatible_glasses_search_stop.model_name 
         });
       } else if ('app_info' in data) {
-        GlobalEventEmitter.emit('APP_INFO_RESULT', {
-          appInfo: data.app_info
+        GlobalEventEmitter.emit('APP_INFO_RESULT', { 
+          appInfo: data.app_info 
         });
       } else if ('app_is_downloaded' in data) {
-        GlobalEventEmitter.emit('APP_IS_DOWNLOADED_RESULT', {
-          appIsDownloaded: data.app_is_downloaded
+        GlobalEventEmitter.emit('APP_IS_DOWNLOADED_RESULT', { 
+          appIsDownloaded: data.app_is_downloaded 
         });
       } else if ('need_permissions' in data) {
         GlobalEventEmitter.emit('NEED_PERMISSIONS');
       }
     } catch (e) {
-      log.app.error('Error parsing data from Core:', e);
+      console.error('Error parsing data from Core:', e);
       GlobalEventEmitter.emit('STATUS_PARSE_ERROR');
     }
   }
@@ -268,7 +255,7 @@ export class CoreCommunicator extends EventEmitter {
    */
   private startStatusPolling() {
     this.stopStatusPolling();
-
+    
     const pollStatus = () => {
       this.sendRequestStatus();
       this.reconnectionTimer = setTimeout(
@@ -276,7 +263,7 @@ export class CoreCommunicator extends EventEmitter {
         this.isConnected ? 999000 : 2000 // Poll more frequently when not connected
       );
     };
-
+    
     pollStatus();
   }
 
@@ -323,22 +310,22 @@ export class CoreCommunicator extends EventEmitter {
   private async sendData(dataObj: any) {
     try {
       if (INTENSE_LOGGING) {
-        log.app.debug('Sending data to Core:', JSON.stringify(dataObj));
+        console.log('Sending data to Core:', JSON.stringify(dataObj));
       }
-
+      
       // Ensure the service is running
       // if (!(await CoreCommsService.isServiceRunning())) {
       //   CoreCommsService.startService();
       // }
-
+      
       // Send the command
       AOSModule.sendCommand(JSON.stringify(dataObj));
-
+      
     } catch (error) {
-      log.app.error('Failed to send data to Core:', error);
-      GlobalEventEmitter.emit('SHOW_BANNER', {
-        message: `Error sending command to Core: ${error}`,
-        type: 'error'
+      console.error('Failed to send data to Core:', error);
+      GlobalEventEmitter.emit('SHOW_BANNER', { 
+        message: `Error sending command to Core: ${error}`, 
+        type: 'error' 
       });
     }
   }
@@ -349,20 +336,20 @@ export class CoreCommunicator extends EventEmitter {
   public cleanup() {
     // Stop the status polling
     this.stopStatusPolling();
-
+    
     // Remove message event listener
     if (this.messageEventSubscription) {
       this.messageEventSubscription.remove();
       this.messageEventSubscription = null;
     }
-
+    
     // Reset connection state
     this.isConnected = false;
-
+    
     // Reset the singleton instance
     CoreCommunicator.instance = null;
-
-    log.app.info('CoreCommunicator cleaned up');
+    
+    console.log('CoreCommunicator cleaned up');
   }
 
   /* Command methods to interact with Core */
@@ -472,7 +459,7 @@ export class CoreCommunicator extends EventEmitter {
   }
 
   async sendToggleAlwaysOnStatusBar(enabled: boolean) {
-    log.app.info('sendToggleAlwaysOnStatusBar');
+    console.log('sendToggleAlwaysOnStatusBar');
     return await this.sendData({
       command: 'enable_always_on_status_bar',
       params: {
