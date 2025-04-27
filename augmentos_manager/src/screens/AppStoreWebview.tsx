@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../AuthContext';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../components/types';
+import { log } from '../utils/logger';
 
 interface AppStoreWebProps {
   isDarkTheme: boolean;
@@ -47,7 +48,7 @@ const AppStoreWeb: React.FC<AppStoreWebProps> = ({ isDarkTheme, route }) => {
   const handleLoadEnd = () => {
     const supabaseToken = session?.access_token;
     if (!supabaseToken) {
-      console.log('No Supabase token found');
+      log.app.warn('No Supabase token found');
       return;
     }
 
@@ -89,13 +90,13 @@ const AppStoreWeb: React.FC<AppStoreWebProps> = ({ isDarkTheme, route }) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       {hasError ? (
-        <InternetConnectionFallbackComponent 
+        <InternetConnectionFallbackComponent
           retry={() => setHasError(false)} isDarkTheme={false} />
       ) : (
         <View style={styles.webViewContainer}>
           <WebView
             ref={webViewRef}
-            source={{ 
+            source={{
               uri: appStoreUrl
             }}
             style={styles.webView}

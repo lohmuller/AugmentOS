@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,13 @@ import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import GoogleIcon from '../icons/GoogleIcon';
 import AppleIcon from '../icons/AppleIcon';
+import { log } from '../utils/logger';
 
 interface IntroScreenProps {
   navigation: any;
 }
 
-const IntroScreen: React.FC<IntroScreenProps> = ({navigation}) => {
+const IntroScreen: React.FC<IntroScreenProps> = ({ navigation }) => {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -58,33 +59,33 @@ const IntroScreen: React.FC<IntroScreenProps> = ({navigation}) => {
   const handleGoogleSignIn = async () => {
     try {
       // Implement Google sign in logic
-      console.log('Google sign in');
+      log.app.info('Google sign in');
       // After successful sign in
       navigation.replace('Home');
     } catch (error) {
-      console.error('Google sign in failed:', error);
+      log.app.error('Google sign in failed:', error);
     }
   };
 
   const handleAppleSignIn = async () => {
     try {
       // Implement Apple sign in logic
-      console.log('Apple sign in');
+      log.app.info('Apple sign in');
       // After successful sign in
       navigation.replace('Home');
     } catch (error) {
-      console.error('Apple sign in failed:', error);
+      log.app.error('Apple sign in failed:', error);
     }
   };
 
   const handleEmailSignUp = async () => {
     try {
       // Implement email sign up logic
-      console.log('Email sign up:', {email, password});
+      log.app.info(`Email sign up: ${JSON.stringify({ email, password })}`);
       // After successful sign up and sign in
       navigation.replace('Home');
     } catch (error) {
-      console.error('Email sign up failed:', error);
+      log.app.error('Email sign up failed:', error);
     }
   };
 
@@ -93,26 +94,26 @@ const IntroScreen: React.FC<IntroScreenProps> = ({navigation}) => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.card}>
           <Animated.Text
-            style={[styles.title, {opacity, transform: [{translateY}]}]}>
+            style={[styles.title, { opacity, transform: [{ translateY }] }]}>
             AugmentOS
           </Animated.Text>
           <Animated.Text
-            style={[styles.subtitle, {opacity, transform: [{translateY}]}]}>
+            style={[styles.subtitle, { opacity, transform: [{ translateY }] }]}>
             The future of smart glasses starts here.
           </Animated.Text>
           <Animated.View
-            style={[styles.header, {opacity, transform: [{translateY}]}]}>
+            style={[styles.header, { opacity, transform: [{ translateY }] }]}>
             <Animated.Image
               source={require('../assets/AOS.png')}
-              style={[styles.image, {opacity, transform: [{translateY}]}]}
+              style={[styles.image, { opacity, transform: [{ translateY }] }]}
             />
           </Animated.View>
 
           <Animated.View
-            style={[styles.content, {opacity, transform: [{translateY}]}]}>
+            style={[styles.content, { opacity, transform: [{ translateY }] }]}>
             {isSigningUp ? (
               <Animated.View
-                style={[styles.form, {transform: [{scale: formScale}]}]}>
+                style={[styles.form, { transform: [{ scale: formScale }] }]}>
 
 
                 <View style={styles.inputGroup}>
@@ -234,7 +235,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({navigation}) => {
             )}
           </Animated.View>
 
-          <Animated.Text style={[styles.termsText, {opacity}]}>
+          <Animated.Text style={[styles.termsText, { opacity }]}>
             By continuing, you agree to our Terms of Service and Privacy Policy
           </Animated.Text>
         </View>
@@ -243,7 +244,7 @@ const IntroScreen: React.FC<IntroScreenProps> = ({navigation}) => {
   );
 };
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {

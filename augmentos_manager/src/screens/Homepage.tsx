@@ -20,6 +20,7 @@ import semver from 'semver';
 import { Config } from 'react-native-config';
 import CloudConnection from '../components/CloudConnection';
 import { loadSetting, saveSetting } from '../logic/SettingsHelper';
+import { log } from '../utils/logger';
 
 import { NativeModules, NativeEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -66,10 +67,10 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
   const getLocalVersion = () => {
     try {
       const version = Config.AUGMENTOS_VERSION;
-      console.log('Local version from env:', version);
+      log.app.info('Local version from env:', version);
       return version || null;
     } catch (error) {
-      console.error('Error getting local version:', error);
+      log.app.error('Error getting local version:', error);
       return null;
     }
   };
@@ -83,7 +84,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
       // Check if version checks are being ignored this session
       const ignoreCheck = await loadSetting('ignoreVersionCheck', false);
       if (ignoreCheck) {
-        console.log('Version check skipped due to user preference');
+        log.app.info('Version check skipped due to user preference');
         setIsCheckingVersion(false);
         return;
       }
@@ -92,7 +93,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
       const localVer = getLocalVersion();
 
       if (!localVer) {
-        console.error('Failed to get local version from env file');
+        log.app.error('Failed to get local version from env file');
         // Navigate to update screen with connection error
         navigation.navigate('VersionUpdateScreen', {
           isDarkTheme,
@@ -106,11 +107,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
       await backendComms.restRequest('/apps/version', null, {
         onSuccess: (data) => {
           const cloudVer = data.version;
-          console.log(`Comparing local version (${localVer}) with cloud version (${cloudVer})`);
+          log.app.info(`Comparing local version (${localVer}) with cloud version (${cloudVer})`);
 
           // Compare versions using semver
           if (semver.lt(localVer, cloudVer)) {
-            console.log('A new version is available. Navigate to update screen.');
+            log.app.info('A new version is available. Navigate to update screen.');
             // Navigate to update screen with version mismatch
             navigation.navigate('VersionUpdateScreen', {
               isDarkTheme,
@@ -118,13 +119,13 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
               cloudVersion: cloudVer
             });
           } else {
-            console.log('Local version is up-to-date.');
+            log.app.info('Local version is up-to-date.');
             // Stay on homepage, no navigation needed
           }
           setIsCheckingVersion(false);
         },
         onFailure: (errorCode) => {
-          console.error('Failed to fetch cloud version:', errorCode);
+          log.app.error('Failed to fetch cloud version:', errorCode);
           // Navigate to update screen with connection error
           navigation.navigate('VersionUpdateScreen', {
             isDarkTheme,
@@ -133,9 +134,9 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
           setIsCheckingVersion(false);
         }
       });
-      // console.log('Version check completed');
+      // log.app.info('Version check completed');
     } catch (error) {
-      console.error('Error checking cloud version:', error);
+      log.app.error('Error checking cloud version:', error);
       // Navigate to update screen with connection error
       navigation.navigate('VersionUpdateScreen', {
         isDarkTheme,
@@ -205,16 +206,16 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
         <AnimatedSection>
           <Header isDarkTheme={isDarkTheme} navigation={navigation} />
         </AnimatedSection>
-        <ScrollView 
+        <ScrollView
           style={currentThemeStyles.contentContainer}
-          contentContainerStyle={{paddingBottom: 0, flexGrow: 1}} // Force content to fill available space
+          contentContainerStyle={{ paddingBottom: 0, flexGrow: 1 }} // Force content to fill available space
         >
           {status.core_info.cloud_connection_status !== 'CONNECTED' &&
             <AnimatedSection>
               <CloudConnection isDarkTheme={isDarkTheme} />
             </AnimatedSection>
           }
-          
+
           {/* Sensing Disabled Warning */}
           <AnimatedSection>
             <SensingDisabledWarning isSensingEnabled={status.core_info.sensing_enabled} />
@@ -222,8 +223,8 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
 
           <AnimatedSection>
             {/* Use the simulated version if we're connected to simulated glasses */}
-            {status.glasses_info?.model_name && 
-             status.glasses_info.model_name.toLowerCase().includes('simulated') ? (
+            {status.glasses_info?.model_name &&
+              status.glasses_info.model_name.toLowerCase().includes('simulated') ? (
               <ConnectedSimulatedGlassesInfo isDarkTheme={isDarkTheme} />
             ) : (
               <ConnectedDeviceInfo isDarkTheme={isDarkTheme} />
@@ -240,7 +241,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkTheme, toggleTheme }) => {
 
                   <AnimatedSection>
                     <YourAppsList
-                    navigation={navigation}
+                      navigation={navigation}
                       isDarkTheme={isDarkTheme}
                       key={`apps-list-${status.apps.length}`}
                     />

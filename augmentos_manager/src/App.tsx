@@ -47,10 +47,11 @@ import DeveloperSettingsScreen from './screens/DeveloperSettingsScreen.tsx';
 import DashboardSettingsScreen from './screens/DashboardSettingsScreen.tsx';
 import ScreenSettingsScreen from './screens/ScreenSettingsScreen.tsx';
 import NavigationBar from './components/NavigationBar';
+import { log } from './utils/logger';
 
 const linking = {
   prefixes: [
-    'https://augmentos.org', 
+    'https://augmentos.org',
     // Temporarily commented out until token exchange flow is fixed
     // 'https://appstore.augmentos.org', 
     'com.augmentos://',
@@ -80,7 +81,7 @@ const App: React.FC = () => {
   // Reset ignoreVersionCheck setting on app start
   useEffect(() => {
     saveSetting('ignoreVersionCheck', false);
-    console.log('Reset version check ignore flag on app start');
+    log.app.info('Reset version check ignore flag on app start');
   }, []);
 
   const toggleTheme = () => {
@@ -89,9 +90,9 @@ const App: React.FC = () => {
 
   // Screens where the navbar should be hidden
   const hideNavbarScreens = [
-    'Login', 
-    'SplashScreen', 
-    'VerifyEmailScreen', 
+    'Login',
+    'SplashScreen',
+    'VerifyEmailScreen',
     'VersionUpdateScreen',
     'WelcomePage',
     'ConnectingToPuck'
@@ -107,7 +108,7 @@ const App: React.FC = () => {
                 <GlassesMirrorProvider>
                   <MessageBanner />
                   <ModalProvider isDarkTheme={isDarkTheme} />
-                  <NavigationContainer 
+                  <NavigationContainer
                     linking={linking}
                     ref={navigationRef}
                     onStateChange={() => {
@@ -115,8 +116,8 @@ const App: React.FC = () => {
                       setCurrentRouteName(currentRoute?.name || '');
                     }}
                   >
-                    <View style={[styles.mainContainer, {flexDirection: 'column', justifyContent: 'space-between'}]}>
-                      <View style={[styles.contentContainer, {flex: 1, marginBottom: -1}]}>
+                    <View style={[styles.mainContainer, { flexDirection: 'column', justifyContent: 'space-between' }]}>
+                      <View style={[styles.contentContainer, { flex: 1, marginBottom: -1 }]}>
                         <Stack.Navigator initialRouteName="SplashScreen">
                           <Stack.Screen
                             name="SplashScreen"
@@ -272,202 +273,202 @@ const App: React.FC = () => {
                             options={({ route }) => ({
                               headerShown: false,
 
-                                    title: route.params.appName
-                                      ? `Reviews for ${route.params.appName}`
-                                      : 'Reviews',
-                                    headerStyle: {
-                                      backgroundColor: isDarkTheme ? '#333333' : '#FFFFFF',
-                                    },
-                                    headerTintColor: isDarkTheme ? '#FFFFFF' : '#000000',
-                                  })}>
-                                  {props => <Reviews {...props} isDarkTheme={isDarkTheme} />}
-                                </Stack.Screen>
+                              title: route.params.appName
+                                ? `Reviews for ${route.params.appName}`
+                                : 'Reviews',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#333333' : '#FFFFFF',
+                              },
+                              headerTintColor: isDarkTheme ? '#FFFFFF' : '#000000',
+                            })}>
+                            {props => <Reviews {...props} isDarkTheme={isDarkTheme} />}
+                          </Stack.Screen>
 
-                                  <Stack.Screen
-                                    name="AppDetails"
-                                    options={({ route }) => ({
-                                      headerShown: false,
-                                      title: route.params.app.name || 'App Details',
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#333333' : '#FFFFFF',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#FFFFFF' : '#000000',
-                                      headerTitleStyle: {
-                                        color: isDarkTheme ? '#FFFFFF' : '#000000',
-                                      },
-                                    })}>
-                                    {props => <AppDetails toggleTheme={function (): void {
-                                      throw new Error('Function not implemented.');
-                                    }} {...props} isDarkTheme={isDarkTheme} />}
-                                  </Stack.Screen>
-                                  <Stack.Screen
-                                    name="ProfileSettings"
-                                    options={{
-                                      headerShown: false,
-                                      title: 'Profile Settings',
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
-                                    }}>
-                                    {props => (
-                                      <ProfileSettingsPage {...props} isDarkTheme={isDarkTheme} />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen
-                                    name="GlassesMirror"
-                                    options={{
-                                      headerShown: false,
-                                      title: 'Glasses Mirror',
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
-                                    }}>
-                                    {() => <GlassesMirror isDarkTheme={isDarkTheme} />}
-                                  </Stack.Screen>
-                                  <Stack.Screen
-                                    name="GlassesMirrorFullscreen"
-                                    options={{
-                                      headerShown: false,
-                                      title: 'Glasses Mirror Fullscreen',
-                                      gestureEnabled: false,
-                                    }}>
-                                    {() => <GlassesMirrorFullscreen isDarkTheme={isDarkTheme} />}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="AppSettings"
-                                    options={({ route }) => ({
-                                      title: route.params?.appName,
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
-                                    })}>
-                                    {props => (
-                                      <AppSettings
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="AppWebView"
-                                    options={({ route }) => ({
-                                      title: route.params?.appName || 'App',
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
-                                      headerBackTitle: 'Back',
-                                    })}>
-                                    {props => (
-                                      <AppWebView
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="PhoneNotificationSettings"
-                                    options={{
-                                      title: 'Notifications',
-                                      headerStyle: {
-                                        backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
-                                      },
-                                      headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
-                                    }}>
-                                    {props => (
-                                      <PhoneNotificationSettings
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen
-                                    name="ErrorReportScreen"
-                                    component={ErrorReportScreen}
-                                    options={{ title: 'Report an Error' }}
-                                  />
-                                  <Stack.Screen name="SelectGlassesModelScreen"
-                                    options={{ title: 'Select Glasses' }}
-                                  >
-                                    {props => (
-                                      <SelectGlassesModelScreen
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="GlassesPairingGuideScreen"
-                                    options={{ title: 'Pairing Guide' }}
-                                  >
-                                    {props => (
-                                      <GlassesPairingGuideScreen
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="GlassesPairingGuidePreparationScreen"
-                                    options={{ title: 'Pairing Guide' }}
-                                  >
-                                    {props => (
-                                      <GlassesPairingGuidePreparationScreen
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
-                                  <Stack.Screen name="SelectGlassesBluetoothScreen"
-                                    options={{ title: 'Finding Glasses' }}
-                                  >
-                                    {props => (
-                                      <SelectGlassesBluetoothScreen
-                                        {...props}
-                                        toggleTheme={toggleTheme}
-                                        isDarkTheme={isDarkTheme}
-                                      />
-                                    )}
-                                  </Stack.Screen>
+                          <Stack.Screen
+                            name="AppDetails"
+                            options={({ route }) => ({
+                              headerShown: false,
+                              title: route.params.app.name || 'App Details',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#333333' : '#FFFFFF',
+                              },
+                              headerTintColor: isDarkTheme ? '#FFFFFF' : '#000000',
+                              headerTitleStyle: {
+                                color: isDarkTheme ? '#FFFFFF' : '#000000',
+                              },
+                            })}>
+                            {props => <AppDetails toggleTheme={function (): void {
+                              throw new Error('Function not implemented.');
+                            }} {...props} isDarkTheme={isDarkTheme} />}
+                          </Stack.Screen>
+                          <Stack.Screen
+                            name="ProfileSettings"
+                            options={{
+                              headerShown: false,
+                              title: 'Profile Settings',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
+                              },
+                              headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
+                            }}>
+                            {props => (
+                              <ProfileSettingsPage {...props} isDarkTheme={isDarkTheme} />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen
+                            name="GlassesMirror"
+                            options={{
+                              headerShown: false,
+                              title: 'Glasses Mirror',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
+                              },
+                              headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
+                            }}>
+                            {() => <GlassesMirror isDarkTheme={isDarkTheme} />}
+                          </Stack.Screen>
+                          <Stack.Screen
+                            name="GlassesMirrorFullscreen"
+                            options={{
+                              headerShown: false,
+                              title: 'Glasses Mirror Fullscreen',
+                              gestureEnabled: false,
+                            }}>
+                            {() => <GlassesMirrorFullscreen isDarkTheme={isDarkTheme} />}
+                          </Stack.Screen>
+                          <Stack.Screen name="AppSettings"
+                            options={({ route }) => ({
+                              title: route.params?.appName,
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
+                              },
+                              headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
+                            })}>
+                            {props => (
+                              <AppSettings
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen name="AppWebView"
+                            options={({ route }) => ({
+                              title: route.params?.appName || 'App',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
+                              },
+                              headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
+                              headerBackTitle: 'Back',
+                            })}>
+                            {props => (
+                              <AppWebView
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen name="PhoneNotificationSettings"
+                            options={{
+                              title: 'Notifications',
+                              headerStyle: {
+                                backgroundColor: isDarkTheme ? '#000000' : '#ffffff',
+                              },
+                              headerTintColor: isDarkTheme ? '#ffffff' : '#000000',
+                            }}>
+                            {props => (
+                              <PhoneNotificationSettings
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen
+                            name="ErrorReportScreen"
+                            component={ErrorReportScreen}
+                            options={{ title: 'Report an Error' }}
+                          />
+                          <Stack.Screen name="SelectGlassesModelScreen"
+                            options={{ title: 'Select Glasses' }}
+                          >
+                            {props => (
+                              <SelectGlassesModelScreen
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen name="GlassesPairingGuideScreen"
+                            options={{ title: 'Pairing Guide' }}
+                          >
+                            {props => (
+                              <GlassesPairingGuideScreen
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen name="GlassesPairingGuidePreparationScreen"
+                            options={{ title: 'Pairing Guide' }}
+                          >
+                            {props => (
+                              <GlassesPairingGuidePreparationScreen
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
+                          <Stack.Screen name="SelectGlassesBluetoothScreen"
+                            options={{ title: 'Finding Glasses' }}
+                          >
+                            {props => (
+                              <SelectGlassesBluetoothScreen
+                                {...props}
+                                toggleTheme={toggleTheme}
+                                isDarkTheme={isDarkTheme}
+                              />
+                            )}
+                          </Stack.Screen>
 
-                                </Stack.Navigator>
-                              </View>
-                              {!hideNavbarScreens.includes(currentRouteName) && (
-                                <View style={{
-                                  marginTop: -30, // Adjusted to close gap
-                                  backgroundColor: isDarkTheme ? '#000000' : '#F2F2F7', // Match navbar color
-                                }}>
-                                  <NavigationBar isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
-                                </View>
-                              )}
-                            </View>
-                          </NavigationContainer>
-                        </GlassesMirrorProvider>
-                      </SearchResultsProvider>
-                    </StatusProvider>
-                  </AuthProvider>
-                </NotificationListener>
-              </SafeAreaProvider>
-            </GestureHandlerRootView>
-          );
-        };
+                        </Stack.Navigator>
+                      </View>
+                      {!hideNavbarScreens.includes(currentRouteName) && (
+                        <View style={{
+                          marginTop: -30, // Adjusted to close gap
+                          backgroundColor: isDarkTheme ? '#000000' : '#F2F2F7', // Match navbar color
+                        }}>
+                          <NavigationBar isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
+                        </View>
+                      )}
+                    </View>
+                  </NavigationContainer>
+                </GlassesMirrorProvider>
+              </SearchResultsProvider>
+            </StatusProvider>
+          </AuthProvider>
+        </NotificationListener>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+};
 
-        const styles = StyleSheet.create({
-          container: {
-            flex: 1,
-          },
-          mainContainer: {
-            flex: 1,
-            flexDirection: 'column',
-            overflow: 'hidden',
-          },
-          contentContainer: {
-            flex: 1,
-          },
-        });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  mainContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    overflow: 'hidden',
+  },
+  contentContainer: {
+    flex: 1,
+  },
+});
 
-        export default App;
+export default App;

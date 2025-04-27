@@ -25,6 +25,7 @@ import { requestFeaturePermissions, PermissionFeatures, checkFeaturePermissions,
 import { checkNotificationAccessSpecialPermission, checkAndRequestNotificationAccessSpecialPermission } from "../utils/NotificationServiceUtils";
 import { NotificationService } from '../logic/NotificationServiceUtils';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface PrivacySettingsScreenProps {
   isDarkTheme: boolean;
@@ -55,7 +56,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
   // Check permissions when screen loads
   React.useEffect(() => {
     const checkPermissions = async () => {
-      console.log('Checking permissions in PrivacySettingsScreen');
+      log.app.info('Checking permissions in PrivacySettingsScreen');
       // Check notification permissions
       if (Platform.OS === 'android') {
         const hasNotificationAccess = await checkNotificationAccessSpecialPermission();
@@ -64,7 +65,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
         const hasNotifications = await checkFeaturePermissions(PermissionFeatures.NOTIFICATIONS);
         setNotificationsEnabled(hasNotifications);
       }
-      
+
       // Check calendar permissions
       const hasCalendar = await checkFeaturePermissions(PermissionFeatures.CALENDAR);
       setCalendarEnabled(hasCalendar);
@@ -73,30 +74,30 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
     checkPermissions();
   }, []);
 
-  React.useEffect(()=>{
-    console.log('Calendar enabled:', calendarEnabled);
+  React.useEffect(() => {
+    log.app.info('Calendar enabled:', calendarEnabled);
   }, [calendarEnabled])
-  
+
   // Monitor app state to detect when user returns from settings
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (appState.match(/inactive|background/) && nextAppState === 'active') {
         // App has come to the foreground - recheck permissions
-        console.log('App returned to foreground, rechecking notification permissions');
+        log.app.info('App returned to foreground, rechecking notification permissions');
         (async () => {
           if (Platform.OS === 'android') {
             const hasNotificationAccess = await checkNotificationAccessSpecialPermission();
-            
+
             // If permission was granted while away, enable notifications and start service
             if (hasNotificationAccess && !notificationsEnabled) {
-              console.log('Notification permission was granted while away, enabling notifications');
+              log.app.info('Notification permission was granted while away, enabling notifications');
               setNotificationsEnabled(true);
-              
+
               // Start notification listener service 
               try {
                 await NotificationService.startNotificationListenerService();
               } catch (error) {
-                console.error('Error starting notification service:', error);
+                log.app.error('Error starting notification service:', error);
               }
             }
           } else {
@@ -105,14 +106,14 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
               setNotificationsEnabled(true);
             }
           }
-          
+
 
 
           if (Platform.OS === 'ios') {
-            console.log('Adding delay before checking iOS calendar permissions');
+            log.app.info('Adding delay before checking iOS calendar permissions');
             await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second delay
           }
-        
+
           // Also recheck calendar permissions
           const hasCalendar = await checkFeaturePermissions(PermissionFeatures.CALENDAR);
           if (Platform.OS === 'ios' && calendarPermissionPending) {
@@ -150,7 +151,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
       const hasMicPermission = await requestFeaturePermissions(PermissionFeatures.MICROPHONE);
       if (!hasMicPermission) {
         // Permission denied, don't toggle the setting
-        console.log('Microphone permission denied, cannot enable onboard mic');
+        log.app.info('Microphone permission denied, cannot enable onboard mic');
         showAlert(
           'Microphone Permission Required',
           'Microphone permission is required to use the onboard microphone feature. Please grant microphone permission in settings.',
@@ -159,7 +160,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
         return;
       }
     }
-    
+
     // Continue with toggling the setting if permission granted or turning off
     let newForceCoreOnboardMic = !forceCoreOnboardMic;
     await coreCommunicator.sendToggleForceCoreOnboardMic(newForceCoreOnboardMic);
@@ -173,18 +174,18 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
   };
 
   const changeBrightness = async (newBrightness: number) => {
-    if (status.glasses_info?.brightness === '-') {return;}
+    if (status.glasses_info?.brightness === '-') { return; }
     await coreCommunicator.setGlassesBrightnessMode(newBrightness, false);
 
-    console.log(`Brightness set to: ${newBrightness}`);
+    log.app.info(`Brightness set to: ${newBrightness}`);
   };
-  
+
   const handleToggleNotifications = async () => {
     if (!notificationsEnabled) {
       if (Platform.OS === 'android') {
         // Try to request notification access
         await checkAndRequestNotificationAccessSpecialPermission();
-        
+
         // Re-check permissions after the request
         const hasAccess = await checkNotificationAccessSpecialPermission();
         if (hasAccess) {
@@ -207,12 +208,12 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
       setNotificationsEnabled(false);
     }
   };
-  
+
   const handleToggleCalendar = async () => {
     if (!calendarEnabled) {
       // Immediately set pending state to prevent toggle flicker
       setCalendarPermissionPending(true);
-      
+
       try {
         // For iOS specifically, we need to handle permission granting with special care
         if (Platform.OS === 'ios') {
@@ -220,39 +221,39 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
           // Wait a short time before requesting to ensure the UI updates first
           setCalendarEnabled(true);
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
           // Request permission
           const granted = await requestFeaturePermissions(PermissionFeatures.CALENDAR);
-          
-          console.log(`Calendar permission request result:`, granted);
-          
+
+          log.app.info(`Calendar permission request result:`, granted);
+
           if (!granted) {
             // Permission was denied (either first time or previously)
             // We'll check when they come back from Settings with the AppState change listener
-            console.log('Calendar permission denied or previously denied');
+            log.app.info('Calendar permission denied or previously denied');
             setCalendarEnabled(false);
           } else {
             // Permission was granted, make sure toggle stays ON
             setCalendarEnabled(true);
-            
+
             // Wait a moment to ensure UI updates before calendar sync
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             // Try to trigger calendar sync
             try {
               if (Platform.OS === 'ios' && NativeModules.AOSModule) {
                 // Use a synchronous pattern to prevent state changes during the promise
                 try {
                   const result = await NativeModules.AOSModule.syncCalendarEvents();
-                  console.log('Explicitly triggered iOS calendar sync after permission granted', result);
+                  log.app.info('Explicitly triggered iOS calendar sync after permission granted', result);
                 } catch (syncErr) {
-                  console.error('Error syncing calendar:', syncErr);
+                  log.app.error('Error syncing calendar:', syncErr);
                 }
               } else {
-                console.log('Calendar sync not available for this platform');
+                log.app.info('Calendar sync not available for this platform');
               }
             } catch (error) {
-              console.error('Failed to trigger calendar sync:', error);
+              log.app.error('Failed to trigger calendar sync:', error);
             }
           }
         } else {
@@ -265,7 +266,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
           }
         }
       } catch (error) {
-        console.error('Error requesting calendar permissions:', error);
+        log.app.error('Error requesting calendar permissions:', error);
         setCalendarEnabled(false);
       } finally {
         // Make sure we're setting pending to false after everything else is done
@@ -332,7 +333,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
         {/* Notification Permission - Android Only */}
         {Platform.OS === 'android' && (
           <View style={[
-            styles.settingItem, 
+            styles.settingItem,
             // Add a border at the bottom of the notifications item since it's not the last item
             styles.settingItemWithBorder,
             { borderBottomColor: isDarkTheme ? '#444444' : '#e0e0e0' }
@@ -362,7 +363,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
             />
           </View>
         )}
-        
+
         {/* Calendar Permission - last item in this section so no border */}
         <View style={[styles.settingItem, styles.lastItemInSection]}>
           <View style={styles.settingTextContainer}>
@@ -393,7 +394,7 @@ const PrivacySettingsScreen: React.FC<PrivacySettingsScreenProps> = ({
 
         {/* PRIVACY OPTIONS SECTION */}
         <Text style={[
-          styles.sectionHeader, 
+          styles.sectionHeader,
           styles.sectionHeaderWithMargin,
           isDarkTheme ? styles.lightText : styles.darkText
         ]}>

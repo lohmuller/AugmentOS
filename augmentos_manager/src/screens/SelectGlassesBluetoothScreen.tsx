@@ -25,6 +25,7 @@ import GlobalEventEmitter from '../logic/GlobalEventEmitter';
 import { useSearchResults } from '../providers/SearchResultsContext';
 import { requestFeaturePermissions, PermissionFeatures } from '../logic/PermissionsUtils';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 // import NavigationBar from '../components/NavigationBar'; // if needed
 
 interface SelectGlassesBluetoothScreenProps {
@@ -42,13 +43,13 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
   const navigation = useNavigation<NavigationProps>();
   const { searchResults, setSearchResults } = useSearchResults();
 
- // Create a ref to track the current state of searchResults
- const searchResultsRef = useRef<string[]>(searchResults);
+  // Create a ref to track the current state of searchResults
+  const searchResultsRef = useRef<string[]>(searchResults);
 
- // Keep the ref updated whenever searchResults changes
- useEffect(() => {
-   searchResultsRef.current = searchResults;
- }, [searchResults]);
+  // Keep the ref updated whenever searchResults changes
+  useEffect(() => {
+    searchResultsRef.current = searchResults;
+  }, [searchResults]);
 
   React.useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
@@ -57,7 +58,7 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
         coreCommunicator.sendForgetSmartGlasses();
         coreCommunicator.sendDisconnectWearable();
       } else {
-        console.log('Navigation triggered by', actionType, 'so skipping disconnect logic.');
+        log.app.info('Navigation triggered by', actionType, 'so skipping disconnect logic.');
       }
     });
 
@@ -66,16 +67,16 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
 
   React.useEffect(() => {
     const handleSearchResult = ({ modelName, deviceName }: { modelName: string, deviceName: string }) => {
-      // console.log("GOT SOME SEARCH RESULTS:");
-      // console.log("ModelName: " + modelName);
-      // console.log("DeviceName: " + deviceName);
+      // log.app.info("GOT SOME SEARCH RESULTS:");
+      // log.app.info("ModelName: " + modelName);
+      // log.app.info("DeviceName: " + deviceName);
 
-      if(deviceName === "NOTREQUIREDSKIP") {
-        console.log("SKIPPING");
+      if (deviceName === "NOTREQUIREDSKIP") {
+        log.app.info("SKIPPING");
 
         // Quick hack // bugfix => we get NOTREQUIREDSKIP twice in some cases, so just stop after the initial one
         GlobalEventEmitter.removeListener('COMPATIBLE_GLASSES_SEARCH_RESULT', handleSearchResult);
-        
+
         triggerGlassesPairingGuide(glassesModelName, "");
         return;
       }
@@ -89,8 +90,8 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
     };
 
     const stopSearch = ({ modelName }: { modelName: string }) => {
-      console.log("SEARCH RESULTS:")
-      console.log(JSON.stringify(searchResults));
+      log.app.info("SEARCH RESULTS:")
+      log.app.info(JSON.stringify(searchResults));
       if (searchResultsRef.current.length === 0) {
         showAlert(
           "No " + modelName + " found",
@@ -111,7 +112,7 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
         );
       }
     };
-    
+
 
     if (!MOCK_CONNECTION) {
       GlobalEventEmitter.on('COMPATIBLE_GLASSES_SEARCH_RESULT', handleSearchResult);
@@ -129,31 +130,31 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
 
   React.useEffect(() => {
     const initializeAndSearchForDevices = async () => {
-      console.log('Searching for compatible devices for: ', glassesModelName);
+      log.app.info('Searching for compatible devices for: ', glassesModelName);
       setSearchResults([]);
-      
+
       // For iOS, make sure BleManager is initialized before searching
       if (Platform.OS === 'ios') {
         // Using any type since we don't have direct access to the private method
         await (coreCommunicator as any).initializeBleManager?.();
       }
-      
+
       coreCommunicator.sendSearchForCompatibleDeviceNames(glassesModelName);
     };
-    
+
     initializeAndSearchForDevices();
   }, [glassesModelName]);
 
   React.useEffect(() => {
     // If puck gets d/c'd here, return to home
     if (!status.core_info.puck_connected) {
-      // console.log("RETURN HOME FROM PAIR SCREEN: DISCONNECTED FROM PUCK")
+      // log.app.info("RETURN HOME FROM PAIR SCREEN: DISCONNECTED FROM PUCK")
       navigation.navigate('Home');
     }
 
     // If pairing successful, return to home
     if (status.core_info.puck_connected && status.glasses_info?.model_name) {
-      // console.log("RETURN HOME FROM PAIR SCREEN: GOT MODEL NAME: " + status.glasses_info?.model_name);
+      // log.app.info("RETURN HOME FROM PAIR SCREEN: GOT MODEL NAME: " + status.glasses_info?.model_name);
       navigation.navigate('Home');
     }
   }, [status]);
@@ -163,7 +164,7 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
     if (Platform.OS === 'android') {
       // First check location permission, which is required for Bluetooth scanning on Android
       const hasLocationPermission = await requestFeaturePermissions(PermissionFeatures.LOCATION);
-      
+
       if (!hasLocationPermission) {
         // Inform the user that location permission is required for Bluetooth scanning
         showAlert(
@@ -174,10 +175,10 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
         return; // Stop the connection process
       }
     }
-    
+
     // Next, check microphone permission for all platforms
     const hasMicPermission = await requestFeaturePermissions(PermissionFeatures.MICROPHONE);
-    
+
     // Only proceed if permission is granted
     if (!hasMicPermission) {
       // Inform the user that microphone permission is required
@@ -188,7 +189,7 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
       );
       return; // Stop the connection process
     }
-    
+
     // All permissions granted, proceed with connecting to the wearable
     coreCommunicator.sendConnectWearable(glassesModelName, deviceName);
     navigation.navigate('GlassesPairingGuideScreen', {
@@ -225,8 +226,8 @@ const SelectGlassesBluetoothScreen: React.FC<SelectGlassesBluetoothScreenProps> 
                   key={index}
                   style={[
                     styles.settingItem,
-                    { 
-                      backgroundColor: theme.cardBg, 
+                    {
+                      backgroundColor: theme.cardBg,
                       borderColor: theme.borderColor,
                     }
                   ]}

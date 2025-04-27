@@ -1,4 +1,6 @@
 import { NativeModule, NativeModules, NativeEventEmitter, Platform, PermissionsAndroid } from 'react-native';
+import { log } from '../utils/logger';
+
 interface NotificationServiceInterface extends NativeModule {
   isNotificationListenerEnabled: () => Promise<boolean>;
   startNotificationListenerService: () => Promise<string>;
@@ -19,13 +21,13 @@ export const NotificationEventEmitter = new NativeEventEmitter(NotificationServi
 export const requestNotificationPermission = async (): Promise<boolean> => {
   const requestResult = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
   if (requestResult === PermissionsAndroid.RESULTS.GRANTED) {
-    console.log('Notification permission granted.');
+    log.app.info('Notification permission granted.');
     return true;
   } else if (requestResult === PermissionsAndroid.RESULTS.DENIED) {
-    console.log('Notification permission denied.');
+    log.app.warn('Notification permission denied.');
     return false;
   } else if (requestResult === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-    console.log('Notification permission set to never ask again.');
+    log.app.warn('Notification permission set to never ask again.');
     return false;
   } else {
     return false;
@@ -37,18 +39,18 @@ export const checkNotificationPermission = async (): Promise<boolean> => {
     try {
       const hasPermission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
       if (hasPermission) {
-        console.log('Notification permission already granted.');
+        log.app.info('Notification permission already granted.');
         return true;
       } else {
-        console.log("We do not have the notification permission");
+        log.app.warn("We do not have the notification permission");
         return false;
       }
     } catch (error) {
-      console.error('Error checking/requesting notification permission:', error);
+      log.app.error('Error checking/requesting notification permission:', error);
       return false;
     }
   } else {
-    console.log('Notification permissions are not required for this platform or version.');
+    log.app.info('Notification permissions are not required for this platform or version.');
     return true;
   }
   return false;

@@ -17,6 +17,7 @@ import { NavigationProps } from '../components/types';
 import PairingDeviceInfo from '../components/PairingDeviceInfo';
 import GlassesTroubleshootingModal from '../components/GlassesTroubleshootingModal';
 import { getPairingGuide } from '../logic/getPairingGuide';
+import { log } from '../utils/logger';
 
 interface GlassesPairingGuideScreenProps {
   isDarkTheme: boolean;
@@ -27,116 +28,116 @@ const GlassesPairingGuideScreen: React.FC<GlassesPairingGuideScreenProps> = ({
   isDarkTheme,
   toggleTheme,
 }) => {
-    const { status } = useStatus();
-    const route = useRoute();
-    const { glassesModelName } = route.params as { glassesModelName: string };
-    const navigation = useNavigation<NavigationProps>();
-    const [showTroubleshootingModal, setShowTroubleshootingModal] = useState(false);
-    const [showHelpAlert, setShowHelpAlert] = useState(false);
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const hasAlertShownRef = useRef(false);
+  const { status } = useStatus();
+  const route = useRoute();
+  const { glassesModelName } = route.params as { glassesModelName: string };
+  const navigation = useNavigation<NavigationProps>();
+  const [showTroubleshootingModal, setShowTroubleshootingModal] = useState(false);
+  const [showHelpAlert, setShowHelpAlert] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasAlertShownRef = useRef(false);
 
-    // Timer to show help message after 30 seconds
-    useEffect(() => {
-      // Reset state when entering screen
-      hasAlertShownRef.current = false;
-      setShowHelpAlert(false);
-      
-      // Set timer for showing help popup
-      timerRef.current = setTimeout(() => {
-        // Only show alert if not already paired and alert hasn't been shown before
-        if (!status.glasses_info?.model_name && !hasAlertShownRef.current) {
-          setShowHelpAlert(true);
-          hasAlertShownRef.current = true;
-        }
-      }, 30000); // 30 seconds
+  // Timer to show help message after 30 seconds
+  useEffect(() => {
+    // Reset state when entering screen
+    hasAlertShownRef.current = false;
+    setShowHelpAlert(false);
 
-      return () => {
-        // Clear timer on unmount
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-        }
-      };
-    }, [glassesModelName]);
+    // Set timer for showing help popup
+    timerRef.current = setTimeout(() => {
+      // Only show alert if not already paired and alert hasn't been shown before
+      if (!status.glasses_info?.model_name && !hasAlertShownRef.current) {
+        setShowHelpAlert(true);
+        hasAlertShownRef.current = true;
+      }
+    }, 30000); // 30 seconds
 
-    // Show help alert if showHelpAlert is true
-    useEffect(() => {
-      if (showHelpAlert) {
-        Alert.alert(
-          "Need Some Help?",
-          `Having trouble pairing your ${glassesModelName}? Wanna see some tips?`,
-          [
-            {
-              text: "No, thanks.",
-              style: "cancel",
-              onPress: () => setShowHelpAlert(false)
-            },
-            {
-              text: "Help Me!",
-              onPress: () => {
-                setShowTroubleshootingModal(true);
-                setShowHelpAlert(false);
-              }
+    return () => {
+      // Clear timer on unmount
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [glassesModelName]);
+
+  // Show help alert if showHelpAlert is true
+  useEffect(() => {
+    if (showHelpAlert) {
+      Alert.alert(
+        "Need Some Help?",
+        `Having trouble pairing your ${glassesModelName}? Wanna see some tips?`,
+        [
+          {
+            text: "No, thanks.",
+            style: "cancel",
+            onPress: () => setShowHelpAlert(false)
+          },
+          {
+            text: "Help Me!",
+            onPress: () => {
+              setShowTroubleshootingModal(true);
+              setShowHelpAlert(false);
             }
-          ]
-        );
+          }
+        ]
+      );
+    }
+  }, [showHelpAlert, glassesModelName]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      const actionType = e.data?.action?.type;
+      if (actionType === 'GO_BACK' || actionType === 'POP') {
+        coreCommunicator.sendForgetSmartGlasses();
+        coreCommunicator.sendDisconnectWearable();
+        e.preventDefault();
+        navigation.navigate('SelectGlassesModelScreen');
+      } else {
+        log.core.info('Navigation triggered by', actionType, 'so skipping disconnect logic.');
       }
-    }, [showHelpAlert, glassesModelName]);
+    });
 
-    useEffect(() => {
-      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-        const actionType = e.data?.action?.type;
-        if (actionType === 'GO_BACK' || actionType === 'POP') {
-          coreCommunicator.sendForgetSmartGlasses();
-          coreCommunicator.sendDisconnectWearable();
-          e.preventDefault();
-          navigation.navigate('SelectGlassesModelScreen');
-        } else {
-          console.log('Navigation triggered by', actionType, 'so skipping disconnect logic.');
-        }
-      });
-    
-      return unsubscribe;
-    }, [navigation]);
+    return unsubscribe;
+  }, [navigation]);
 
-    useEffect(() => {
-      // If pairing successful, return to home
-      if (status.core_info.puck_connected && status.glasses_info?.model_name) {
-        // console.log("RETURN HOME FROM PAIR SCREEN: GOT MODEL NAME: " + status.glasses_info?.model_name);
-        // Clear any pending timers when pairing succeeds
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-        }
-        navigation.navigate('Home');
+  useEffect(() => {
+    // If pairing successful, return to home
+    if (status.core_info.puck_connected && status.glasses_info?.model_name) {
+      // log.core.info("RETURN HOME FROM PAIR SCREEN: GOT MODEL NAME: " + status.glasses_info?.model_name);
+      // Clear any pending timers when pairing succeeds
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
       }
-    }, [status]);
+      navigation.navigate('Home');
+    }
+  }, [status]);
 
 
-    return (
-      <View style={[styles.container, isDarkTheme ? styles.darkBackground : styles.lightBackground]}>
-        <ScrollView style={styles.scrollViewContainer}>
-          <View style={styles.contentContainer}>
-            <PairingDeviceInfo glassesModelName={glassesModelName} isDarkTheme={isDarkTheme} />
-            {getPairingGuide(glassesModelName, isDarkTheme)}
-            
-            <TouchableOpacity 
-              style={[styles.helpButton, { backgroundColor: isDarkTheme ? '#3b82f6' : '#007BFF' }]}
-              onPress={() => setShowTroubleshootingModal(true)}
-            >
-              <Icon name="question-circle" size={16} color="#FFFFFF" style={styles.helpIcon} />
-              <Text style={styles.helpButtonText}>Need Help Pairing?</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-        
-        <GlassesTroubleshootingModal 
-          isVisible={showTroubleshootingModal}
-          onClose={() => setShowTroubleshootingModal(false)}
-          glassesModelName={glassesModelName}
-          isDarkTheme={isDarkTheme}
-        />
-      </View>
-    );
+  return (
+    <View style={[styles.container, isDarkTheme ? styles.darkBackground : styles.lightBackground]}>
+      <ScrollView style={styles.scrollViewContainer}>
+        <View style={styles.contentContainer}>
+          <PairingDeviceInfo glassesModelName={glassesModelName} isDarkTheme={isDarkTheme} />
+          {getPairingGuide(glassesModelName, isDarkTheme)}
+
+          <TouchableOpacity
+            style={[styles.helpButton, { backgroundColor: isDarkTheme ? '#3b82f6' : '#007BFF' }]}
+            onPress={() => setShowTroubleshootingModal(true)}
+          >
+            <Icon name="question-circle" size={16} color="#FFFFFF" style={styles.helpIcon} />
+            <Text style={styles.helpButtonText}>Need Help Pairing?</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <GlassesTroubleshootingModal
+        isVisible={showTroubleshootingModal}
+        onClose={() => setShowTroubleshootingModal(false)}
+        glassesModelName={glassesModelName}
+        isDarkTheme={isDarkTheme}
+      />
+    </View>
+  );
 };
 
 export default GlassesPairingGuideScreen;

@@ -22,6 +22,7 @@ import { SETTINGS_KEYS } from '../consts';
 import { supabase } from '../supabaseClient';
 import { requestFeaturePermissions, PermissionFeatures } from '../logic/PermissionsUtils';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface SettingsPageProps {
   isDarkTheme: boolean;
@@ -74,7 +75,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       const hasMicPermission = await requestFeaturePermissions(PermissionFeatures.MICROPHONE);
       if (!hasMicPermission) {
         // Permission denied, don't toggle the setting
-        console.log('Microphone permission denied, cannot enable phone microphone');
+        log.app.warn('Microphone permission denied, cannot enable phone microphone');
         showAlert(
           'Microphone Permission Required',
           'Microphone permission is required to use the phone microphone feature. Please grant microphone permission in settings.',
@@ -124,7 +125,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
     try {
       // Try to sign out with Supabase - may fail in offline mode
       await supabase.auth.signOut().catch(err => {
-        console.log(
+        log.app.info(
           'Supabase sign-out failed, continuing with local cleanup:',
           err,
         );
@@ -154,7 +155,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
       }
 
       // Clean up other services
-      console.log('Cleaning up local sessions and services');
+      log.app.info('Cleaning up local sessions and services');
 
       // Delete core auth key
       await coreCommunicator.deleteAuthenticationSecretKey();
@@ -173,7 +174,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
         routes: [{ name: 'SplashScreen' }],
       });
     } catch (err) {
-      console.error('Error during sign-out:', err);
+      log.app.error('Error during sign-out:', err);
       // Even if there's an error, still try to navigate away to login
       navigation.reset({
         index: 0,

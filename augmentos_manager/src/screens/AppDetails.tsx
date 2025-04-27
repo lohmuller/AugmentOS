@@ -7,7 +7,7 @@ import {
   ScrollView,
   Image,
   SafeAreaView,
-  ActivityIndicator,Alert,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, AppStoreItem } from '../components/types';
@@ -18,6 +18,11 @@ import semver from 'semver';
 import { NativeModules } from 'react-native';
 const { FetchConfigHelperModule, TpaHelpers } = NativeModules;
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
+import { useStatus } from '../providers/AugmentOSStatusProvider';
+import appStore from "./AppStore.tsx";
+import InstallApkModule from '../bridge/InstallApkModule';
+import { AUGMENTOS_MANAGER_PACKAGE_NAME, AUGMENTOS_CORE_PACKAGE_NAME } from '../consts';
+import { log } from '../utils/logger';
 type AppDetailsProps = NativeStackScreenProps<
   RootStackParamList,
   'AppDetails'
@@ -25,10 +30,6 @@ type AppDetailsProps = NativeStackScreenProps<
   isDarkTheme: boolean;
   toggleTheme: () => void;
 };
-import { useStatus } from '../providers/AugmentOSStatusProvider';
-import appStore from "./AppStore.tsx";
-import InstallApkModule from '../bridge/InstallApkModule';
-import { AUGMENTOS_MANAGER_PACKAGE_NAME, AUGMENTOS_CORE_PACKAGE_NAME } from '../consts';
 
 const AppDetails: React.FC<AppDetailsProps> = ({
   route,
@@ -47,10 +48,10 @@ const AppDetails: React.FC<AppDetailsProps> = ({
       const configJson = await FetchConfigHelperModule.fetchConfig(packageName);
       const parsedConfig = JSON.parse(configJson);
       const version = parsedConfig.version;
-      console.log('Local App Version:', version);
+      log.app.info('Local App Version:', version);
       return version;
     } catch (error) {
-      console.error(
+      log.app.error(
         'Failed to load config for package name ' + packageName,
         error,
       );
@@ -59,7 +60,7 @@ const AppDetails: React.FC<AppDetailsProps> = ({
   };
 
   const fetchVersionFromStatus = (): string | null => {
-    console.log('AugmentOS Core Version:', status?.core_info?.augmentos_core_version);
+    log.app.info('AugmentOS Core Version:', status?.core_info?.augmentos_core_version);
     return status?.core_info?.augmentos_core_version ?? '0.0.0';
   };
 
@@ -83,7 +84,7 @@ const AppDetails: React.FC<AppDetailsProps> = ({
       installedVersion = await fetchConfig(AUGMENTOS_MANAGER_PACKAGE_NAME);
     } else if (app.packageName === AUGMENTOS_CORE_PACKAGE_NAME) {
       installedVersion = fetchVersionFromStatus();
-      console.log('Installed Version:', installedVersion);
+      log.app.info('Installed Version:', installedVersion);
     } else {
       if (!installedApp) {
         setInstallState('Install');
@@ -114,34 +115,34 @@ const AppDetails: React.FC<AppDetailsProps> = ({
 
   useEffect(() => {
     const handleAppDownloaded = (data: { appIsDownloaded: any }) => {
-//         console.log('App is downloaded:', data.appIsDownloaded);
-        // Show the alert to inform the user about the redirection
-        Alert.alert(
-          'Install the App',
-          `You will be redirected to the downloads folder. Please press on ${app.name} to install it.`,
-          [
-            {
-              text: 'OK, Take Me There',
-              onPress: () => {
-                // Proceed with installing the APK after user acknowledges
-                setInstallState('Installing...');
-                InstallApkModule.installApk(data.appIsDownloaded.packageName)
-                  .then((result: any) => {
-                    console.log('Success:', result);
-                    setInstallState('Start');
-                  })
-                  .catch((error: any) => {
-                    console.error('Error:', error);
-                  });
-              },
+      //         log.app.info('App is downloaded:', data.appIsDownloaded);
+      // Show the alert to inform the user about the redirection
+      Alert.alert(
+        'Install the App',
+        `You will be redirected to the downloads folder. Please press on ${app.name} to install it.`,
+        [
+          {
+            text: 'OK, Take Me There',
+            onPress: () => {
+              // Proceed with installing the APK after user acknowledges
+              setInstallState('Installing...');
+              InstallApkModule.installApk(data.appIsDownloaded.packageName)
+                .then((result: any) => {
+                  log.app.info('Success:', result);
+                  setInstallState('Start');
+                })
+                .catch((error: any) => {
+                  log.app.error('Error:', error);
+                });
             },
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-          ],
-          { cancelable: true },
-        );
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true },
+      );
     };
 
     GlobalEventEmitter.on('APP_IS_DOWNLOADED_RESULT', handleAppDownloaded);
@@ -168,11 +169,11 @@ const AppDetails: React.FC<AppDetailsProps> = ({
   const sendInstallAppFromStore = (packageName: string) => {
     if (installState === 'Install' || installState === 'Update') {
       setInstallState('Downloading...');
-      console.log(`Installing app with package name: ${packageName}`);
+      log.app.info(`Installing app with package name: ${packageName}`);
 
       coreCommunicator.installAppByPackageName(packageName);
     } else if (installState === 'Start') {
-      console.log(`Starting app with package name: ${packageName}`);
+      log.app.info(`Starting app with package name: ${packageName}`);
     }
   };
 

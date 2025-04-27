@@ -1,6 +1,7 @@
 import BackendServerComms from '../backend_comms/BackendServerComms';
 import { AppStoreItem } from '../components/types.ts';
 import { GET_APP_STORE_DATA_ENDPOINT } from '../consts';
+import { log } from './logger';
 
 
 const backendServerComms = BackendServerComms.getInstance();
@@ -17,7 +18,7 @@ export const fetchAppStoreData = async (): Promise<AppStoreItem[]> => {
                 resolve(data);
             },
             onFailure: (error: any) => {
-                console.error('Failed to fetch app store data:', error);
+                log.app.error('Failed to fetch app store data:', error);
                 reject(error);
             },
         };
@@ -26,11 +27,11 @@ export const fetchAppStoreData = async (): Promise<AppStoreItem[]> => {
             backendServerComms
                 .restRequest(GET_APP_STORE_DATA_ENDPOINT, null, callback)
                 .catch((error: any) => {
-                    console.error('Error during restRequest:', error);
+                    log.app.error('Error during restRequest:', error);
                     reject(error);
                 });
         } catch (error) {
-            console.error('Error during restRequest:', error);
+            log.app.error('Error during restRequest:', error);
             reject(error);
         }
     });

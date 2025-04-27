@@ -1,6 +1,7 @@
 // LogService.ts
 import { NativeModules, Platform } from 'react-native';
 import BackendServerComms from '../backend_comms/BackendServerComms';
+import { log } from '../utils/logger';
 
 const { LogcatCapture } = NativeModules;
 
@@ -32,11 +33,11 @@ class LogService {
         return await LogcatCapture.getLogs(lines);
       } else {
         // Stub for iOS - to be implemented in the future
-        console.warn(`${this.TAG}: Log module not available on iOS yet`);
+        log.app.warn(`${this.TAG}: Log module not available on iOS yet`);
         return 'Log capture is not yet available on iOS';
       }
     } catch (error) {
-      console.error(`${this.TAG}: Error getting logs -`, error);
+      log.app.error(`${this.TAG}: Error getting logs -`, error);
       return `Error retrieving logs: ${error}`;
     }
   }
@@ -51,11 +52,11 @@ class LogService {
         return await LogcatCapture.clearLogs();
       } else {
         // Stub for iOS - to be implemented in the future
-        console.warn(`${this.TAG}: Log clearing not available on iOS yet`);
+        log.app.warn(`${this.TAG}: Log clearing not available on iOS yet`);
         return false;
       }
     } catch (error) {
-      console.error(`${this.TAG}: Error clearing logs -`, error);
+      log.app.error(`${this.TAG}: Error clearing logs -`, error);
       return false;
     }
   }
@@ -85,7 +86,7 @@ class LogService {
       await this.backendComms.sendErrorReport(reportData);
       return true;
     } catch (error) {
-      console.error(`${this.TAG}: Error sending report -`, error);
+      log.app.error(`${this.TAG}: Error sending report -`, error);
       return false;
     }
   }

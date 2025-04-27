@@ -11,7 +11,8 @@ import ReviewModal from '../components/AppReview/ReviewModal';
 import ReviewDetailsModal from '../components/AppReview/ReviewDetailsModal';
 import AnimatedChatBubble from '../components/AppReview/AnimatedChatBubble';
 import BackendServerComms from '../backend_comms/BackendServerComms';
-import {GET_APP_STORE_DATA_ENDPOINT} from '../consts'; // Assuming BackendServerComms is correctly set up
+import { GET_APP_STORE_DATA_ENDPOINT } from '../consts'; // Assuming BackendServerComms is correctly set up
+import { log } from '../utils/logger';
 
 interface ReviewSectionProps {
   route: any;
@@ -53,7 +54,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({ route, isDarkTheme }) => 
           setIsLoading(false);
         },
         onFailure: (errorCode: number) => {
-          console.error(`Failed to fetch app data. Error code: ${errorCode}`);
+          log.app.error(`Failed to fetch app data. Error code: ${errorCode}`);
           setIsLoading(false);
         },
       };
@@ -97,9 +98,9 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({ route, isDarkTheme }) => 
 
   if (isLoading) {
     return (
-        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-          <ActivityIndicator size="large" color={themeColors.accent} />
-        </View>
+      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+        <ActivityIndicator size="large" color={themeColors.accent} />
+      </View>
     );
   }
 
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   },
   reviewBubble: {
     position: 'absolute',
-    bottom:80,
+    bottom: 80,
     right: 20,
     width: 60,
     height: 60,

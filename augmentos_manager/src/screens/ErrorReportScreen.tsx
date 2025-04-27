@@ -15,6 +15,7 @@ import LogService from '../logic/LogService';
 import { useStatus } from '../providers/AugmentOSStatusProvider';
 import Button from '../components/Button';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface ErrorReportingScreenProps {
   navigation: any;
@@ -52,7 +53,7 @@ const ErrorReportingScreen: React.FC<ErrorReportingScreenProps> = ({ navigation 
         }]
       );
     } catch (error) {
-      console.error("Error sending report:", error);
+      log.app.error("Error sending report:", error);
       showAlert(
         'Error',
         'Could not send error report. Please try again later.',
@@ -87,11 +88,11 @@ const ErrorReportingScreen: React.FC<ErrorReportingScreenProps> = ({ navigation 
 
       <View style={styles.buttonContainer}>
         <Button onPress={sendErrorReport} disabled={isSending}>
-           {isSending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Send Report</Text>
-            )}
+          {isSending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Send Report</Text>
+          )}
         </Button>
       </View>
     </View>

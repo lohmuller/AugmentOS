@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity, Act
 import { launchImageLibrary } from 'react-native-image-picker';
 import NavigationBar from '../components/NavigationBar';
 import { supabase } from '../supabaseClient';
+import { log } from '../utils/logger';
+
 interface ProfileSettingsPageProps {
   isDarkTheme: boolean;
 }
@@ -44,13 +46,12 @@ const ProfileSettingsPage: React.FC<ProfileSettingsPageProps> = ({ isDarkTheme }
   async function handleSignOut() {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error(error);
-      // Handle sign-out error
+      log.app.error('Error during sign out:', error);
     } else {
-      console.log('Sign-out successful');
+      log.app.info('Sign-out successful');
     }
   }
-  
+
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -88,7 +89,7 @@ const ProfileSettingsPage: React.FC<ProfileSettingsPageProps> = ({ isDarkTheme }
 
       <View style={styles.navigationBarContainer}>
         <NavigationBar
-          toggleTheme={() => {}}
+          toggleTheme={() => { }}
           isDarkTheme={isDarkTheme}
         />
       </View>
@@ -168,6 +169,6 @@ const styles = StyleSheet.create({
 
 export default ProfileSettingsPage;
 function alert(_arg0: string) {
-    throw new Error('Function not implemented.');
+  throw new Error('Function not implemented.');
 }
 
