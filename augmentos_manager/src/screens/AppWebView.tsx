@@ -9,6 +9,7 @@ import { RootStackParamList } from '../components/types';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import BackendServerComms from '../backend_comms/BackendServerComms';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 type AppWebViewProps = NativeStackScreenProps<RootStackParamList, 'AppWebView'> & {
   isDarkTheme: boolean;
@@ -56,10 +57,10 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
     }
   }, [navigation, fromSettings, packageName, appName, isDarkTheme]);
 
-  function determineCloudUrl():string|undefined {
+  function determineCloudUrl(): string | undefined {
     const cloudHostName = process.env.CLOUD_PUBLIC_HOST_NAME || process.env.CLOUD_HOST_NAME || process.env.AUGMENTOS_HOST;
     if (cloudHostName && cloudHostName.trim() !== 'prod.augmentos.cloud' && cloudHostName.trim() !== 'cloud' && cloudHostName.includes('.')) {
-      console.log(`For TPA webview token verification, using cloud host name: ${cloudHostName}`);
+      log.app.info(`For TPA webview token verification, using cloud host name: ${cloudHostName}`);
       return `https://${cloudHostName}`;
     }
     return undefined;
@@ -109,10 +110,10 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
         }
 
         setFinalUrl(url.toString());
-        console.log(`Constructed final webview URL: ${url.toString()}`);
+        log.app.info(`Constructed final webview URL: ${url.toString()}`);
 
       } catch (error: any) {
-        console.error("Error generating webview token:", error);
+        log.app.error("Error generating webview token:", error);
         setTokenError(`Failed to prepare secure access: ${error.message}`);
         showAlert(
           'Authentication Error',
@@ -132,7 +133,7 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
   const handleLoadEnd = () => setIsLoading(false);
   const handleError = (syntheticEvent: any) => { // Use any for syntheticEvent
     const { nativeEvent } = syntheticEvent;
-    console.warn('WebView error: ', nativeEvent);
+    log.app.warn('WebView error: ', nativeEvent);
     setIsLoading(false);
     setHasError(true);
     setTokenError(`Failed to load ${appName}: ${nativeEvent.description}`); // Show WebView load error
@@ -158,14 +159,14 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
           retry={() => { /* Implement retry logic if desired, e.g., refetch token */ }}
           isDarkTheme={isDarkTheme}
         />
-         <Text style={[styles.errorText, { color: theme.textColor }]}>{tokenError}</Text>
+        <Text style={[styles.errorText, { color: theme.textColor }]}>{tokenError}</Text>
       </View>
     );
   }
 
   // Render error state if WebView loading failed after token success
   if (hasError) {
-     return (
+    return (
       <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
         <InternetConnectionFallbackComponent
           retry={() => {
@@ -177,7 +178,7 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
           }}
           isDarkTheme={isDarkTheme}
         />
-         <Text style={[styles.errorText, { color: theme.textColor }]}>{tokenError || `Failed to load ${appName}`}</Text>
+        <Text style={[styles.errorText, { color: theme.textColor }]}>{tokenError || `Failed to load ${appName}`}</Text>
       </View>
     );
   }
@@ -212,7 +213,7 @@ const AppWebView: React.FC<AppWebViewProps> = ({ route, navigation, isDarkTheme,
         )}
         {/* Show loading overlay specifically for the WebView loading phase */}
         {isLoading && finalUrl && (
-           <LoadingOverlay message={`Loading ${appName}...`} isDarkTheme={isDarkTheme} />
+          <LoadingOverlay message={`Loading ${appName}...`} isDarkTheme={isDarkTheme} />
         )}
       </View>
     </SafeAreaView>

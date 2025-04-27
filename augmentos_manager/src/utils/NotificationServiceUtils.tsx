@@ -1,5 +1,6 @@
 import { Alert, NativeModules, Platform } from 'react-native';
 import showAlert from './AlertUtils';
+import { log } from './logger';
 
 const { NotificationAccess } = NativeModules;
 
@@ -36,10 +37,10 @@ export async function checkAndRequestNotificationAccessSpecialPermission() {
             onPress: () => {
               NotificationAccess.requestNotificationAccess()
                 .then(() => {
-                  console.log("Notification access settings opened successfully");
+                  log.app.info("Notification access settings opened successfully");
                 })
                 .catch((err: any) => {
-                  console.error('Error opening notification settings:', err);
+                  log.app.error('Error opening notification settings:', err);
                   showAlert(
                     'Error',
                     'Could not open notification settings. Please enable notification access manually in your device settings.',
@@ -52,12 +53,12 @@ export async function checkAndRequestNotificationAccessSpecialPermission() {
         { cancelable: true },
       );
     } else {
-      console.log("Notification access already granted");
+      log.app.info("Notification access already granted");
       return true;
     }
     return false;
   } catch (error) {
-    console.error('Failed to check notification listener permission:', error);
+    log.app.error('Failed to check notification listener permission:', error);
     showAlert(
       'Error',
       'There was a problem checking notification permissions. Please try again later.',

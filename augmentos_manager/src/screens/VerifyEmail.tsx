@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../supabaseClient'; // Replace with your Supabase setup
 import { NavigationProps } from '../components/types';
+import { log } from '../utils/logger';
 
 const VerifyEmailScreen = () => {
     const route = useRoute();
@@ -19,13 +20,13 @@ const VerifyEmailScreen = () => {
                 });
 
                 if (error) {
-                    console.error('Verification failed:', error.message);
+                    log.app.error('Verification failed:', error.message);
                     navigation.reset({
                         index: 0,
                         routes: [{ name: 'SplashScreen' }],
                     });
                 } else {
-                    console.log('Email verified successfully:', data);
+                    log.app.info('Email verified successfully:', data);
                     navigation.reset({
                         index: 0,
                         routes: [{ name: 'Home' }],

@@ -10,9 +10,9 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { 
-  displayPermissionDeniedWarning, 
-  doesHaveAllPermissions, 
+import {
+  displayPermissionDeniedWarning,
+  doesHaveAllPermissions,
   requestGrantPermissions as requestGrantBasicPermissions,
   requestAugmentOSPermissions,
   PermissionFeatures,
@@ -23,6 +23,7 @@ import {
 import Button from '../components/Button';
 import { checkNotificationPermission } from '../logic/NotificationServiceUtils';
 import { checkAndRequestNotificationAccessSpecialPermission, checkNotificationAccessSpecialPermission } from "../utils/NotificationServiceUtils";
+import { log } from '../utils/logger';
 
 interface GrantPermissionsScreenProps {
   isDarkTheme: boolean;
@@ -77,14 +78,14 @@ const GrantPermissionsScreen: React.FC<GrantPermissionsScreenProps> = ({
           appState.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          console.log('App has come to foreground!');
+          log.app.info('App has come to foreground!');
 
           if (await doesHaveAllPermissions()) {
             // Check if we have background location
             const hasBackgroundLocation = await requestFeaturePermissions(PermissionFeatures.BACKGROUND_LOCATION);
             // Battery optimization temporarily disabled
             // const hasBatteryOptimization = await requestFeaturePermissions(PermissionFeatures.BATTERY_OPTIMIZATION);
-            
+
             navigation.reset({
               index: 0,
               routes: [{ name: 'SplashScreen' }],
@@ -109,8 +110,8 @@ const GrantPermissionsScreen: React.FC<GrantPermissionsScreenProps> = ({
   const triggerGrantPermissions = async () => {
     // Request all basic permissions first
     let basicPermissionsGranted = await requestBasicPermissions();
-    console.log("Basic permissions request completed");
-    
+    log.app.info("Basic permissions request completed");
+
     if (basicPermissionsGranted) {
       // Request notification permissions with explanation
       Alert.alert(
@@ -136,7 +137,7 @@ const GrantPermissionsScreen: React.FC<GrantPermissionsScreenProps> = ({
       await displayPermissionDeniedWarning('Required Permissions');
     }
   }
-  
+
   const requestCalendarAccess = () => {
     // After notification permission flow, request optional calendar permission
     Alert.alert(
@@ -165,9 +166,9 @@ const GrantPermissionsScreen: React.FC<GrantPermissionsScreenProps> = ({
     await markPermissionRequested(PermissionFeatures.BASIC);
     await markPermissionRequested(PermissionFeatures.NOTIFICATIONS);
     await markPermissionRequested(PermissionFeatures.CALENDAR);
-    
-    console.log("Proceeding to next screen regardless of optional permissions");
-    
+
+    log.app.info("Proceeding to next screen regardless of optional permissions");
+
     // Add a small delay to ensure state updates have completed
     setTimeout(() => {
       navigation.reset({
@@ -197,7 +198,7 @@ const GrantPermissionsScreen: React.FC<GrantPermissionsScreenProps> = ({
             AugmentOS needs permissions to function properly. Please grant access to continue using all features.
           </Text>
           <Button
-          disabled={false}
+            disabled={false}
             onPress={() => { triggerGrantPermissions() }}
             isDarkTheme={isDarkTheme}
           >

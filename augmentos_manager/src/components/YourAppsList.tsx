@@ -19,6 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AppIcon from './AppIcon';
 import { NavigationProps } from './types';
+import { log } from '../utils/logger';
 
 interface YourAppsListProps {
     isDarkTheme: boolean;
@@ -45,7 +46,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
 
     // Calculate the item width based on container width and margins
     const itemWidth = containerWidth > 0 ? (containerWidth - (GRID_MARGIN * numColumns)) / numColumns : 0;
-    
+
     const textColor = isDarkTheme ? '#FFFFFF' : '#000000';
 
     // Check onboarding status whenever the screen comes into focus
@@ -166,15 +167,15 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                 completeOnboarding();
             }
         }
-        
+
         // Update UI immediately
         updateAppStatus(packageName, true, true);
-        
+
         // Start the operation in the background
         setIsLoading(true);
         try {
             await BackendServerComms.getInstance().startApp(packageName);
-            
+
             if (!onboardingCompleted && packageName === 'com.augmentos.livecaptions') {
                 // If this is the Live Captions app, make sure we've hidden the tip
                 setShowOnboardingTip(false);
@@ -194,7 +195,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
         } catch (error) {
             // Only revert the status if the operation failed
             updateAppStatus(packageName, false, false);
-            console.error('start app error:', error);
+            log.app.error('start app error:', error);
         } finally {
             setIsLoading(false);
         }
@@ -232,8 +233,8 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                 </Text>
             </View>
 
-            
-            <ScrollView 
+
+            <ScrollView
                 style={styles.listContainer}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollViewContent}
@@ -249,7 +250,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                         {showOnboardingTip && app.packageName === 'com.augmentos.livecaptions' && (
                             <View style={styles.arrowContainer}>
                                 <View style={styles.arrowWrapper}>
-                                    <Animated.View 
+                                    <Animated.View
                                         style={[
                                             styles.arrowBubble,
                                             {
@@ -290,7 +291,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                                             ]}
                                         />
                                     </Animated.View>
-                                    <Animated.View 
+                                    <Animated.View
                                         style={[
                                             styles.arrowIconContainer,
                                             isDarkTheme ? styles.arrowIconContainerDark : styles.arrowIconContainerLight,
@@ -309,7 +310,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                                             }
                                         ]}
                                     >
-                                        <Animated.View 
+                                        <Animated.View
                                             style={[
                                                 styles.glowEffect,
                                                 {
@@ -319,7 +320,7 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                                                     }),
                                                     backgroundColor: 'rgba(0, 176, 255, 0.3)',
                                                 }
-                                            ]} 
+                                            ]}
                                         />
                                         <Icon
                                             name="arrow-down-bold"
@@ -342,10 +343,10 @@ const YourAppsList: React.FC<YourAppsListProps> = ({ isDarkTheme }) => {
                                 onClick={() => startApp(app.packageName)}
                                 style={styles.appIconStyle}
                             />
-                            <Text style={[styles.appName, {color: textColor}]}>
+                            <Text style={[styles.appName, { color: textColor }]}>
                                 {app.name || 'Convoscope'}
                             </Text>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 onPress={() => openAppSettings(app)}
                                 style={styles.settingsButton}
                             >

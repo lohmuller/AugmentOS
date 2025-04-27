@@ -18,6 +18,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 import { NativeModules, NativeEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { log } from '../utils/logger';
 const { AOSModule, CoreCommsService } = NativeModules;
 const AOSEventEmitter = new NativeEventEmitter(CoreCommsService);
 
@@ -34,7 +35,7 @@ interface AnimatedSectionProps extends PropsWithChildren {
 const connectionStateListener = AOSEventEmitter.addListener(
   'onConnectionStateChanged',
   (event: any) => {
-    console.log('Connection state changed:', event);
+    log.app.info(`Connection state changed: ${JSON.stringify(event)}`);
     // Update UI based on connection state
   }
 );
@@ -64,17 +65,17 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
 
   const startScan = () => {
     AOSModule.startScan(
-      (result: any) => console.log('Scan result:', result),
-      (error: any) => console.error('Scan error:', error)
+      (result: any) => log.app.info(`Scan result: ${JSON.stringify(result)}`),
+      (error: any) => log.app.error('Scan error:', error)
     );
   };
 
   const connectGlasses = async () => {
     try {
       await AOSModule.connectGlasses();
-      console.log("Glasses are paired, connecting now...");
+      log.app.info("Glasses are paired, connecting now...");
     } catch (error) {
-      console.error('connectGlasses() error:', error);
+      log.app.error('connectGlasses() error:', error);
     }
   };
 
@@ -90,7 +91,7 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
     try {
       await AOSModule.sendText(sampleText);
     } catch (error) {
-      console.error('sendText() error:', error);
+      log.app.error('sendText() error:', error);
     }
 
     if (clearScreenTimeoutRef.current) {
@@ -127,7 +128,7 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
       await AOSModule.sendText(" ");
 
     } catch (error) {
-      console.error('loading screen error:', error);
+      log.app.error('loading screen error:', error);
     }
   };
 
@@ -140,7 +141,7 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
         }
       }));
     } catch (error) {
-      console.error('startLiveCaptions() error:', error);
+      log.app.error('startLiveCaptions() error:', error);
     }
   };
 
@@ -153,7 +154,7 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
         }
       }));
     } catch (error) {
-      console.error('startMerge() error:', error);
+      log.app.error('startMerge() error:', error);
     }
   };
 
@@ -166,16 +167,16 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
         }
       }));
     } catch (error) {
-      console.error('startMira() error:', error);
+      log.app.error('startMira() error:', error);
     }
   };
 
   const getBatteryStatus = async () => {
     try {
       const batteryStatus = await AOSModule.getBatteryStatus();
-      console.log('Battery Status:', batteryStatus);
+      log.app.info('Battery Status:', batteryStatus);
     } catch (error) {
-      console.error('getBatteryStatus() error:', error);
+      log.app.error('getBatteryStatus() error:', error);
     }
   };
 
@@ -183,16 +184,16 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
     try {
       await AOSModule.sendWhitelist(" ");
     } catch (error) {
-      console.error('sendWhitelist() error:', error);
+      log.app.error('sendWhitelist() error:', error);
     }
   };
 
   const sendBrightnessSetting = async (value: number, autoBrightness: boolean) => {
     try {
       await AOSModule.setBrightness(value, autoBrightness);
-      console.log(`Brightness set to: ${value}`);
+      log.app.info(`Brightness set to: ${value}`);
     } catch (error) {
-      console.error('setBrightness() error:', error);
+      log.app.error('setBrightness() error:', error);
     }
   };
 
@@ -200,9 +201,9 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
     try {
       await AOSModule.setMicEnabled(value);
       setMicEnabled(value);
-      console.log(`Mic state set to: ${value}`);
+      log.app.info(`Mic state set to: ${value}`);
     } catch (error) {
-      console.error('toggleMicEnabled() error:', error);
+      log.app.error('toggleMicEnabled() error:', error);
     }
   };
 
@@ -210,7 +211,7 @@ const Homepage: React.FC<TestingPageProps> = ({ isDarkTheme, toggleTheme }) => {
     try {
       await AOSModule.connectServer();
     } catch (error) {
-      console.error('connectServer() error:', error);
+      log.app.error('connectServer() error:', error);
     }
   };
 

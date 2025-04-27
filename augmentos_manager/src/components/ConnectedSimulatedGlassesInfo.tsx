@@ -1,9 +1,10 @@
-import React, {useEffect, useRef} from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import coreCommunicator from '../bridge/CoreCommunicator';
 import { useStatus } from '../providers/AugmentOSStatusProvider';
 import { useGlassesMirror } from '../providers/GlassesMirrorContext';
 import GlassesDisplayMirror from './GlassesDisplayMirror';
+import { log } from '../utils/logger';
 
 interface ConnectedSimulatedGlassesInfoProps {
   isDarkTheme: boolean;
@@ -14,7 +15,7 @@ const ConnectedSimulatedGlassesInfo: React.FC<ConnectedSimulatedGlassesInfoProps
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const { status } = useStatus();
   const { events } = useGlassesMirror();
-  
+
   // Get the last event to display in the mirror
   const lastEvent = events.length > 0 ? events[events.length - 1] : null;
 
@@ -42,12 +43,12 @@ const ConnectedSimulatedGlassesInfo: React.FC<ConnectedSimulatedGlassesInfoProps
   }, []);
 
   const sendDisconnectWearable = async () => {
-    console.log('Disconnecting simulated wearable');
+    log.app.info('Disconnecting simulated wearable');
     try {
       await coreCommunicator.sendDisconnectWearable();
       await coreCommunicator.sendForgetSmartGlasses();
     } catch (error) {
-      console.error('Error disconnecting simulated wearable:', error);
+      log.app.error('Error disconnecting simulated wearable:', error);
     }
   };
 
@@ -60,29 +61,29 @@ const ConnectedSimulatedGlassesInfo: React.FC<ConnectedSimulatedGlassesInfoProps
     <View style={[styles.deviceInfoContainer, { backgroundColor: themeStyles.backgroundColor }]}>
       <View style={styles.connectedContent}>
         {/* Mirror Display Area - Takes up all available space above bottom bar */}
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.mirrorWrapper, 
-            { 
-              opacity: fadeAnim, 
-              transform: [{ scale: scaleAnim }] 
+            styles.mirrorWrapper,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }]
             }
           ]}
         >
-          <GlassesDisplayMirror 
+          <GlassesDisplayMirror
             layout={lastEvent?.layout}
             fallbackMessage="Simulated Glasses Display"
             containerStyle={styles.mirrorContainer}
           />
         </Animated.View>
       </View>
-      
+
       {/* Bottom Bar with "Simulated Glasses" text and disconnect button */}
       <View style={styles.bottomBar}>
         <Text style={[styles.simulatedGlassesText, { color: themeStyles.textColor }]}>
           Simulated Glasses
         </Text>
-        
+
         <TouchableOpacity
           style={styles.disconnectButton}
           onPress={sendDisconnectWearable}

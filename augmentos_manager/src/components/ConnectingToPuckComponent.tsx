@@ -19,6 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Button from './Button';
 import { loadSetting } from '../logic/SettingsHelper.tsx';
 import { SETTINGS_KEYS } from '../consts.tsx';
+import { log } from '../utils/logger';
 
 interface ConnectingToPuckComponentProps {
   isDarkTheme?: boolean;
@@ -90,7 +91,7 @@ const ConnectingToPuckComponent = ({
   };
 
   useEffect(() => {
-    console.log("STATUS", status);
+    log.app.info("STATUS", status);
 
     // Don't show the error UI for initial load attempts and avoid repeating failed attempts
     if (connectionError || hasAttemptedConnection.current) return;
@@ -103,7 +104,7 @@ const ConnectingToPuckComponent = ({
       // 1) Get the Supabase token from your AuthContext
       const supabaseToken = session?.access_token;
       if (!supabaseToken) {
-        console.log('No Supabase token found');
+        log.app.info('No Supabase token found');
         setErrorMessage('Unable to authenticate. Please sign in again.');
         setConnectionError(true);
         return;
@@ -111,7 +112,7 @@ const ConnectingToPuckComponent = ({
 
       // 2) Check if we need to do the exchange
       if (!status.auth.core_token_owner || status.auth.core_token_owner !== user.email) {
-        console.log("OWNER IS NULL CALLING VERIFY (TOKEN EXCHANGE)");
+        log.app.info("OWNER IS NULL CALLING VERIFY (TOKEN EXCHANGE)");
 
         // Don't try automatic retry if we're already loading or had an error
         if (!isLoading) {
@@ -137,7 +138,7 @@ const ConnectingToPuckComponent = ({
           isDarkTheme ? styles.darkBackground : styles.lightBackground
         ]}
       >
-        <Animated.View 
+        <Animated.View
           style={[
             styles.authLoadingOverlay,
             { opacity: loadingOverlayOpacity }

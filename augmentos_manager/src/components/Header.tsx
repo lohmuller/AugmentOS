@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { checkNotificationAccessSpecialPermission } from '../utils/NotificationServiceUtils';
 import { checkFeaturePermissions, PermissionFeatures } from '../logic/PermissionsUtils';
 import { showAlert } from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface HeaderProps {
   isDarkTheme: boolean;
@@ -31,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
         // TODO: ios (there's no way to get the notification permission on ios so just set to true to disable the warning)
         setHasNotificationListenerPermission(true);
       }
-      
+
       // Check calendar permission
       const hasCalPermission = await checkFeaturePermissions(PermissionFeatures.CALENDAR);
       setHasCalendarPermission(hasCalPermission);
@@ -39,12 +40,12 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
 
     // Check permissions on component mount
     checkPermissions();
-    
+
     // Set up AppState listener to check permissions when app comes back to foreground
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (appState.match(/inactive|background/) && nextAppState === 'active') {
         // App has come to the foreground
-        console.log('App has come to foreground, checking permissions');
+        log.app.info('App has come to foreground, checking permissions');
         checkPermissions();
       }
       setAppState(nextAppState);
@@ -62,7 +63,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
     if (navigation) {
       navigation.navigate('Intro');
     } else {
-      console.error('Navigation prop is undefined');
+      log.app.error('Navigation prop is undefined');
     }
   };
 
@@ -70,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
     if (navigation) {
       navigation.navigate('ProfileSettings');
     } else {
-      console.error('Navigation prop is undefined');
+      log.app.error('Navigation prop is undefined');
     }
   };
 
@@ -87,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
             if (navigation) {
               navigation.navigate('PrivacySettingsScreen');
             } else {
-              console.error('Navigation prop is undefined');
+              log.app.error('Navigation prop is undefined');
             }
           }
         }
@@ -108,16 +109,16 @@ const Header: React.FC<HeaderProps> = ({ isDarkTheme, navigation }) => {
       <Text style={[styles.title, { color: textColor }]} numberOfLines={1}>
         AugmentOS
       </Text>
-      
+
       {(!hasNotificationListenerPermission || !hasCalendarPermission) && (
         <TouchableOpacity
           style={styles.alertIconContainer}
           onPress={handleNotificationAlert}
         >
-          <Icon 
-            name="notifications-off" 
-            size={24} 
-            color="#FF3B30" 
+          <Icon
+            name="notifications-off"
+            size={24}
+            color="#FF3B30"
           />
           <View style={styles.alertDot} />
         </TouchableOpacity>

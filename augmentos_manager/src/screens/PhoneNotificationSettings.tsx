@@ -21,6 +21,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { NotificationService } from '../logic/NotificationServiceUtils';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
 import { checkAndRequestNotificationAccessSpecialPermission, checkNotificationAccessSpecialPermission } from '../utils/NotificationServiceUtils';
+import { log } from '../utils/logger';
 
 interface PhoneNotificationSettingsProps {
   isDarkTheme: boolean;
@@ -51,14 +52,14 @@ const PhoneNotificationSettings: React.FC<PhoneNotificationSettingsProps> = ({
     let newEnablePhoneNotification = !isEnablePhoneNotification;
     if (newEnablePhoneNotification) {
       if ((await checkNotificationAccessSpecialPermission())) {
-        console.log("We have notification perms!!!")
+        log.app.info("We have notification perms!!!")
         if (await NotificationService.isNotificationListenerEnabled()) {
-          console.log('Notification listener already enabled');
+          log.app.info('Notification listener already enabled');
         } else {
           await NotificationService.startNotificationListenerService();
         }
       } else {
-        console.log("Don't have permissions oh well sad")
+        log.app.warn("Don't have permissions oh well sad")
         GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Lacking permissions to display notifications', type: 'error' });
         await checkAndRequestNotificationAccessSpecialPermission();
         newEnablePhoneNotification = false;

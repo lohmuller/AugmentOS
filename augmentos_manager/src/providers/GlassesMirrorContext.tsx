@@ -1,7 +1,8 @@
 // GlassesMirrorContext.tsx
-import React, {createContext, useContext, useState, useEffect, useCallback} from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
 import { MOCK_CONNECTION } from '../consts';
+import { log } from '../utils/logger';
 
 interface IGlassesMirrorContext {
   events: any[];
@@ -10,21 +11,23 @@ interface IGlassesMirrorContext {
 
 const GlassesMirrorContext = createContext<IGlassesMirrorContext>({
   events: [],
-  clearEvents: () => {},
+  clearEvents: () => { },
 });
 
-export const GlassesMirrorProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
+export const GlassesMirrorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<any[]>([]);
 
+  log.app.info('GlassesMirrorContext initialized');
+
   // 1) Attach the listener here in the provider. This provider
-  //    lives at the top-level, so it’s always mounted.
+  //    lives at the top-level, so it's always mounted.
   useEffect(() => {
     const handleGlassesDisplayEvent = (event: any) => {
-      // console.log('Global Listener: GOT A GLASSES DISPLAY EVENT', event);
- //     setEvents(prev => [...prev, event]);
+      log.app.info('Global Listener: GOT A GLASSES DISPLAY EVENT', event);
+      //     setEvents(prev => [...prev, event]);
       setEvents([event]);
-   
-};
+
+    };
 
     if (!MOCK_CONNECTION) {
       GlobalEventEmitter.on('GLASSES_DISPLAY_EVENT', handleGlassesDisplayEvent);

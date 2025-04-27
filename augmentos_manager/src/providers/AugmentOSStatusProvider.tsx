@@ -6,6 +6,7 @@ import GlobalEventEmitter from "../logic/GlobalEventEmitter.tsx";
 import BackendServerComms from '../backend_comms/BackendServerComms';
 import { useAuth } from '../AuthContext';
 import coreCommunicator from '../bridge/CoreCommunicator';
+import { log } from '../utils/logger';
 
 // Define the base AppInfo type
 export interface AppInfo {
@@ -51,21 +52,21 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
     });
     const [isInitialized, setIsInitialized] = useState(false);
     const [screenMirrorItems, setScreenMirrorItems] = useState<{ id: string; name: string }[]>([]);
-    
+
     const refreshStatus = useCallback((data: any) => {
-        if (!(data && 'status' in data)) {return;}
+        if (!(data && 'status' in data)) { return; }
 
         const parsedStatus = AugmentOSParser.parseStatus(data);
         if (INTENSE_LOGGING)
-            console.log('Parsed status:', parsedStatus);
-        
+            log.app.info('Parsed status:', parsedStatus);
+
         setStatus(prevStatus => {
             // Create a new status object that preserves optimistic updates
             const newStatus: AugmentOSMainStatusWithTimestamps = {
                 ...parsedStatus,
                 apps: parsedStatus.apps.map(app => ({ ...app, lastUpdated: undefined }))
             };
-            
+
             // For each app in the current status, check if it has a more recent update
             prevStatus.apps.forEach(prevApp => {
                 const newAppIndex = newStatus.apps.findIndex(a => a.packageName === prevApp.packageName);
@@ -82,7 +83,7 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
                     }
                 }
             });
-            
+
             return newStatus;
         });
     }, []);
@@ -93,7 +94,7 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         // Force a complete reset of status during sign-out/sign-in transition
         if (!user) {
-            console.log('User signed out, resetting status');
+            log.app.info('User signed out, resetting status');
             setStatus(AugmentOSParser.defaultStatus);
             return;
         }
@@ -101,16 +102,16 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
         if (!isInitialized) return;
 
         // Log the status provider re-initialization for debugging
-        console.log('STATUS PROVIDER: Initializing event listeners for user:', user?.email);
+        log.app.info('STATUS PROVIDER: Initializing event listeners for user:', user?.email);
 
         const handleStatusUpdateReceived = (data: any) => {
             if (INTENSE_LOGGING)
-                console.log('Handling received data.. refreshing status..');
+                log.app.info('Handling received data.. refreshing status..');
             refreshStatus(data);
         };
 
         const handleDeviceDisconnected = () => {
-            console.log('Core disconnected');
+            log.app.info('Core disconnected');
             setStatus(AugmentOSParser.defaultStatus);
         };
 
@@ -119,13 +120,13 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
             coreCommunicator.removeAllListeners('statusUpdateReceived');
             coreCommunicator.removeAllListeners('dataReceived');
             GlobalEventEmitter.removeAllListeners('STATUS_PARSE_ERROR');
-            
+
             // Register fresh listeners
             coreCommunicator.on('statusUpdateReceived', handleStatusUpdateReceived);
             GlobalEventEmitter.on('STATUS_PARSE_ERROR', handleDeviceDisconnected);
-            
-            console.log('STATUS PROVIDER: Event listeners registered successfully');
-            
+
+            log.app.info('STATUS PROVIDER: Event listeners registered successfully');
+
             // Force a status request to update UI immediately
             setTimeout(() => {
                 coreCommunicator.sendRequestStatus();
@@ -136,18 +137,18 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
             if (!MOCK_CONNECTION) {
                 coreCommunicator.removeListener('statusUpdateReceived', handleStatusUpdateReceived);
                 GlobalEventEmitter.removeListener('STATUS_PARSE_ERROR', handleDeviceDisconnected);
-                console.log('STATUS PROVIDER: Event listeners cleaned up');
+                log.app.info('STATUS PROVIDER: Event listeners cleaned up');
             }
         };
     }, [refreshStatus, isInitialized, user]); // Added user dependency
 
     // Initialize the Core communication
     const initializeCoreConnection = React.useCallback(() => {
-        console.log("Initializing Core communication");
+        log.app.info("Initializing Core communication");
         coreCommunicator.initialize();
         setIsInitialized(true);
     }, []);
-    
+
     // Helper to get coreToken (directly returns from BackendServerComms)
     const getCoreToken = useCallback(() => {
         return BackendServerComms.getInstance().getCoreToken();
@@ -160,34 +161,34 @@ export const StatusProvider = ({ children }: { children: ReactNode }) => {
             // Create a new copy of the apps array with the updated app
             const updatedApps = prevStatus.apps.map(app => {
                 if (app.packageName === packageName) {
-                    return { 
-                        ...app, 
-                        is_running: isRunning, 
+                    return {
+                        ...app,
+                        is_running: isRunning,
                         is_foreground: isForeground,
                         lastUpdated: now
                     };
                 }
                 // If setting a new foreground app, make sure other apps aren't foreground
                 if (isForeground && isRunning && app.is_foreground) {
-                    return { 
-                        ...app, 
+                    return {
+                        ...app,
                         is_foreground: false,
                         lastUpdated: now
                     };
                 }
                 return app;
             });
-            
+
             // Return a new status object with the updated apps
             return { ...prevStatus, apps: updatedApps };
         });
     }, []);
 
     return (
-        <AugmentOSStatusContext.Provider value={{ 
+        <AugmentOSStatusContext.Provider value={{
             initializeCoreConnection,
-            screenMirrorItems, 
-            status, 
+            screenMirrorItems,
+            status,
             refreshStatus,
             getCoreToken,
             updateAppStatus

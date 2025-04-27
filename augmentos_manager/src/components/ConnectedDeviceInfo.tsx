@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getGlassesImage } from '../logic/getGlassesImage';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
 import { getBatteryColor, getBatteryIcon } from '../logic/getBatteryIcon';
+import { log } from '../utils/logger';
 
 
 interface ConnectedDeviceInfoProps {
@@ -95,12 +96,12 @@ const ConnectedDeviceInfo: React.FC<ConnectedDeviceInfoProps> = ({ isDarkTheme }
     const requirementsCheck = await coreCommunicator.checkConnectivityRequirements();
     if (!requirementsCheck.isReady) {
       // Show alert about missing requirements
-      console.log('Requirements not met, showing banner with message:', requirementsCheck.message);
-      GlobalEventEmitter.emit('SHOW_BANNER', { 
-        message: requirementsCheck.message || 'Cannot connect to glasses - check Bluetooth and Location settings', 
-        type: 'error' 
+      log.app.info('Requirements not met, showing banner with message:', requirementsCheck.message);
+      GlobalEventEmitter.emit('SHOW_BANNER', {
+        message: requirementsCheck.message || 'Cannot connect to glasses - check Bluetooth and Location settings',
+        type: 'error'
       });
-      
+
       return;
     }
 
@@ -112,11 +113,11 @@ const ConnectedDeviceInfo: React.FC<ConnectedDeviceInfoProps> = ({ isDarkTheme }
         await coreCommunicator.sendConnectWearable(status.core_info.default_wearable);
       }
     } catch (error) {
-      console.error('connect to glasses error:', error);
+      log.app.error('connect to glasses error:', error);
       setConnectButtonDisabled(false);
-      GlobalEventEmitter.emit('SHOW_BANNER', { 
-        message: 'Failed to connect to glasses', 
-        type: 'error' 
+      GlobalEventEmitter.emit('SHOW_BANNER', {
+        message: 'Failed to connect to glasses',
+        type: 'error'
       });
     }
   };
@@ -125,7 +126,7 @@ const ConnectedDeviceInfo: React.FC<ConnectedDeviceInfoProps> = ({ isDarkTheme }
     setDisconnectButtonDisabled(true);
     setConnectButtonDisabled(false);
 
-    console.log('Disconnecting wearable');
+    log.app.info('Disconnecting wearable');
 
     try {
       await coreCommunicator.sendDisconnectWearable();
@@ -158,10 +159,10 @@ const ConnectedDeviceInfo: React.FC<ConnectedDeviceInfoProps> = ({ isDarkTheme }
 
   // Determine the button style for connecting glasses
   const getConnectButtonStyle = () => {
-      return status.glasses_info?.is_searching ?
-        styles.connectingButton :
-          isConnectButtonDisabled ? styles.disabledButton :
-                                    styles.connectButton;
+    return status.glasses_info?.is_searching ?
+      styles.connectingButton :
+      isConnectButtonDisabled ? styles.disabledButton :
+        styles.connectButton;
   };
 
   return (
@@ -194,9 +195,9 @@ const ConnectedDeviceInfo: React.FC<ConnectedDeviceInfoProps> = ({ isDarkTheme }
                         <>
                           <Text style={[styles.statusLabel, { color: themeStyles.statusLabelColor }]}>Battery</Text>
                           <View style={styles.batteryContainer}>
-                          {status.glasses_info?.battery_life >= 0 &&
-                            <Icon name={batteryIcon} size={16} color={batteryColor} style={styles.batteryIcon} />
-                          }
+                            {status.glasses_info?.battery_life >= 0 &&
+                              <Icon name={batteryIcon} size={16} color={batteryColor} style={styles.batteryIcon} />
+                            }
                             <Text style={[styles.batteryValue, { color: batteryColor }]}>
                               {status.glasses_info.battery_life == -1
                                 ? "-"

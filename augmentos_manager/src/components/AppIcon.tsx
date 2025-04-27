@@ -10,6 +10,7 @@ import { getAppImage } from '../logic/getAppImage';
 import { FallbackImageBackground } from './FallbackImageBackground';
 import { saveSetting, loadSetting } from '../logic/SettingsHelper';
 import { SETTINGS_KEYS } from '../consts';
+import { log } from '../utils/logger';
 
 interface AppIconProps {
     app: AppInfo;
@@ -34,16 +35,16 @@ const AppIcon: React.FC<AppIconProps> = ({
         // Mark onboarding as completed when user long-presses an app icon
         try {
             await saveSetting(SETTINGS_KEYS.ONBOARDING_COMPLETED, true);
-            console.log('Onboarding marked as completed');
-            
+            log.app.info('Onboarding marked as completed');
+
             // Track the number of times settings have been accessed
             const currentCount = await loadSetting(SETTINGS_KEYS.SETTINGS_ACCESS_COUNT, 0);
             await saveSetting(SETTINGS_KEYS.SETTINGS_ACCESS_COUNT, currentCount + 1);
-            console.log(`Settings access count: ${currentCount + 1}`);
+            log.app.info(`Settings access count: ${currentCount + 1}`);
         } catch (error) {
-            console.error('Failed to save settings data:', error);
+            log.app.error('Failed to save settings data:', error);
         }
-        
+
         navigation.navigate('AppSettings', {
             packageName: app.packageName,
             appName: app.name

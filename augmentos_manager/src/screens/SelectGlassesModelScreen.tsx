@@ -19,6 +19,7 @@ import { SETTINGS_KEYS } from '../consts';
 import NavigationBar from '../components/NavigationBar';
 import { getGlassesImage } from '../logic/getGlassesImage';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
+import { log } from '../utils/logger';
 
 interface SelectGlassesModelScreenProps {
     isDarkTheme: boolean;
@@ -56,7 +57,7 @@ const SelectGlassesModelScreen: React.FC<SelectGlassesModelScreenProps> = ({
         React.useCallback(() => {
             const checkOnboardingStatus = async () => {
                 const onboardingCompleted = await loadSetting(SETTINGS_KEYS.ONBOARDING_COMPLETED, true);
-                console.log("ONBOARDING COMPLETED IN SELECTGLASSESMODELSCREEN???: " + onboardingCompleted);
+                log.app.info(`ONBOARDING COMPLETED IN SELECTGLASSESMODELSCREEN???: ${onboardingCompleted}`);
                 setIsOnboarding(!onboardingCompleted);
             };
 
@@ -70,7 +71,7 @@ const SelectGlassesModelScreen: React.FC<SelectGlassesModelScreenProps> = ({
         // No need for Bluetooth permissions anymore as we're using direct communication
 
         setGlassesModelNameToPair(glassesModelName);
-        console.log("TRIGGERING SEARCH SCREEN FOR: " + glassesModelName);
+        log.app.info(`TRIGGERING SEARCH SCREEN FOR: ${glassesModelName}`);
         navigation.navigate('GlassesPairingGuidePreparationScreen', {
             glassesModelName: glassesModelName,
         });

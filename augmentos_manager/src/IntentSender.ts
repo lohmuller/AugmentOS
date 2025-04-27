@@ -1,6 +1,7 @@
 // ManagerApp/src/IntentSender.ts
 
 import { NativeModules } from 'react-native';
+import { log } from './utils/logger';
 
 const { IntentSender } = NativeModules;
 
@@ -19,9 +20,9 @@ const sendProtocolIntent = async (protocolData: ProtocolData): Promise<void> => 
   try {
     const jsonPayload = JSON.stringify(protocolData);
     IntentSender.sendIntent(jsonPayload);
-    console.log('Intent sent successfully');
+    log.app.info('Intent sent successfully');
   } catch (error) {
-    console.error('Error sending intent:', error);
+    log.app.error('Error sending intent:', error);
   }
 };
 

@@ -2,6 +2,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { Config } from 'react-native-config';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
+import { log } from '../utils/logger';
 
 interface Callback {
   onSuccess: (data: any) => void;
@@ -34,16 +35,16 @@ export default class BackendServerComms {
     }
     return BackendServerComms.instance;
   }
-  
+
   public setCoreToken(token: string | null): void {
     this.coreToken = token;
-    console.log(`${this.TAG}: Core token ${token ? 'set' : 'cleared'}`);
+    log.core.info(`Core token ${token ? 'set' : 'cleared'}`);
   }
-  
+
   public getCoreToken(): string | null {
     return this.coreToken;
   }
-  
+
 
   public async restRequest(endpoint: string, data: any, callback: Callback): Promise<void> {
     try {
@@ -70,15 +71,15 @@ export default class BackendServerComms {
           callback.onFailure(-1);
         }
       } else {
-        console.log(`${this.TAG}: Error - ${response.statusText}`);
+        log.core.error(`Error - ${response.statusText}`);
         callback.onFailure(response.status);
       }
     } catch (error: any) {
-      console.log(`${this.TAG}: Network Error -`, error.message || error);
+      log.core.error(`Network Error - ${error.message || error}`);
       callback.onFailure(-1);
     }
   }
-  
+
   /**
    * Send error report to backend server
    * @param reportData The error report data
@@ -90,7 +91,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/app/error-report`;
-    console.log('Sending error report to:', url);
+    log.core.info('Sending error report to:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -110,7 +111,7 @@ export default class BackendServerComms {
         throw new Error(`Error sending report: ${response.statusText}`);
       }
     } catch (error: any) {
-      console.error(`${this.TAG}: Error sending report -`, error.message || error);
+      log.core.error(`Error sending report - ${error.message || error}`);
       throw error;
     }
   }
@@ -127,10 +128,10 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        console.log("GOT A RESPONSE!!!")
-        console.log("\n\n");
-        console.log(JSON.stringify(response.data));
-        console.log("\n\n\n\n");
+        log.core.debug("GOT A RESPONSE!!!");
+        log.core.debug("\n\n");
+        log.core.debug(JSON.stringify(response.data));
+        log.core.debug("\n\n\n\n");
         // Store the token internally
         this.setCoreToken(response.data.coreToken);
         return response.data.coreToken;
@@ -148,7 +149,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/tpasettings/${tpaName}`;
-    console.log('Fetching TPA settings from:', url);
+    log.core.info('Fetching TPA settings from:', url);
 
     const config: AxiosRequestConfig = {
       method: 'GET',
@@ -162,13 +163,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        console.log('Received TPA settings:', response.data);
+        log.core.info('Received TPA settings:', response.data);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      console.error('Error fetching TPA settings:', error.message || error);
+      log.core.error('Error fetching TPA settings:', error.message || error);
       throw error;
     }
   }
@@ -180,7 +181,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/tpasettings/${tpaName}`;
-    console.log('Updating TPA settings via:', url);
+    log.core.info('Updating TPA settings via:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -195,103 +196,29 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        console.log('Updated TPA settings:', response.data);
+        log.core.info('Updated TPA settings:', response.data);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      console.error('Error updating TPA settings:', error.message || error);
+      log.core.error('Error updating TPA settings:', error.message || error);
       throw error;
     }
   }
 
-    /**
-   * Start an app using the REST API
-   * @param packageName Package name of the app to start
-   * @returns Response including app state
-   */
-    public async startApp(packageName: string): Promise<any> {
-      if (!this.coreToken) {
-        throw new Error('No core token available for authentication');
-      }
-
-      const url = `${this.serverUrl}/apps/${packageName}/start`;
-      console.log('Starting app:', packageName);
-  
-      const config: AxiosRequestConfig = {
-        method: 'POST',
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.coreToken}`,
-        },
-      };
-  
-      try {
-        const response = await axios(config);
-        if (response.status === 200 && response.data) {
-          console.log('App started successfully:', packageName);
-          return response.data;
-        } else {
-          throw new Error(`Bad response: ${response.statusText}`);
-        }
-      } catch (error: any) {
-        //console.error('Error starting app:', error.message || error);
-        //GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' })
-        GlobalEventEmitter.emit('SHOW_BANNER', { message: `Could not connect to ${packageName}`, type: "error" });
-        throw error;
-      }
-    }
-  
-    /**
-     * Stop an app using the REST API
-     * @param packageName Package name of the app to stop
-     * @returns Response including app state
-     */
-    public async stopApp(packageName: string): Promise<any> {
-      if (!this.coreToken) {
-        throw new Error('No core token available for authentication');
-      }
-
-      const url = `${this.serverUrl}/apps/${packageName}/stop`;
-      console.log('Stopping app:', packageName);
-  
-      const config: AxiosRequestConfig = {
-        method: 'POST',
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.coreToken}`,
-        },
-      };
-  
-      try {
-        const response = await axios(config);
-        if (response.status === 200 && response.data) {
-          console.log('App stopped successfully:', packageName);
-          return response.data;
-        } else {
-          throw new Error(`Bad response: ${response.statusText}`);
-        }
-      } catch (error: any) {
-        console.error('Error stopping app:', error.message || error);
-        throw error;
-      }
-    }
-
   /**
-   * Uninstall an app using the REST API
-   * @param packageName Package name of the app to uninstall
-   * @returns Response including uninstallation status
-   */
-  public async uninstallApp(packageName: string): Promise<any> {
+ * Start an app using the REST API
+ * @param packageName Package name of the app to start
+ * @returns Response including app state
+ */
+  public async startApp(packageName: string): Promise<any> {
     if (!this.coreToken) {
       throw new Error('No core token available for authentication');
     }
 
-    const url = `${this.appStoreUrl}/api/apps/uninstall/${packageName}`;
-    console.log('Uninstalling app:', packageName);
+    const url = `${this.serverUrl}/apps/${packageName}/start`;
+    log.core.info('Starting app:', packageName);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -305,13 +232,87 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        console.log('App uninstalled successfully:', packageName);
+        log.core.info('App started successfully:', packageName);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      console.error('Error uninstalling app:', error.message || error);
+      //log.core.error('Error starting app:', error.message || error);
+      //GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' })
+      GlobalEventEmitter.emit('SHOW_BANNER', { message: `Could not connect to ${packageName}`, type: "error" });
+      throw error;
+    }
+  }
+
+  /**
+   * Stop an app using the REST API
+   * @param packageName Package name of the app to stop
+   * @returns Response including app state
+   */
+  public async stopApp(packageName: string): Promise<any> {
+    if (!this.coreToken) {
+      throw new Error('No core token available for authentication');
+    }
+
+    const url = `${this.serverUrl}/apps/${packageName}/stop`;
+    log.core.info('Stopping app:', packageName);
+
+    const config: AxiosRequestConfig = {
+      method: 'POST',
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.coreToken}`,
+      },
+    };
+
+    try {
+      const response = await axios(config);
+      if (response.status === 200 && response.data) {
+        log.core.info('App stopped successfully:', packageName);
+        return response.data;
+      } else {
+        throw new Error(`Bad response: ${response.statusText}`);
+      }
+    } catch (error: any) {
+      log.core.error('Error stopping app:', error.message || error);
+      throw error;
+    }
+  }
+
+  /**
+   * Uninstall an app using the REST API
+   * @param packageName Package name of the app to uninstall
+   * @returns Response including uninstallation status
+   */
+  public async uninstallApp(packageName: string): Promise<any> {
+    if (!this.coreToken) {
+      throw new Error('No core token available for authentication');
+    }
+
+    const url = `${this.appStoreUrl}/api/apps/uninstall/${packageName}`;
+    log.core.info('Uninstalling app:', packageName);
+
+    const config: AxiosRequestConfig = {
+      method: 'POST',
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.coreToken}`,
+      },
+    };
+
+    try {
+      const response = await axios(config);
+      if (response.status === 200 && response.data) {
+        log.core.info('App uninstalled successfully:', packageName);
+        return response.data;
+      } else {
+        throw new Error(`Bad response: ${response.statusText}`);
+      }
+    } catch (error: any) {
+      log.core.error('Error uninstalling app:', error.message || error);
       throw error;
     }
   }
@@ -328,7 +329,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/api/auth/generate-webview-token`;
-    console.log('Requesting webview token for:', packageName, 'at URL:', url);
+    log.core.info('Requesting webview token for:', packageName, 'at URL:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -343,13 +344,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data.success && response.data.token) {
-        console.log(`Received temporary webview token for ${packageName}`);
+        log.core.info(`Received temporary webview token for ${packageName}`);
         return response.data.token;
       } else {
         throw new Error(`Failed to generate webview token: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      console.error(`${this.TAG}: Error generating webview token -`, error.message || error);
+      log.core.error(`Error generating webview token - ${error.message || error}`);
       // Consider more specific error handling based on response status if available
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(`Failed to generate webview token: ${error.response.data?.error || error.message}`);
@@ -364,7 +365,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/api/auth/hash-with-api-key`;
-    
+
     const config: AxiosRequestConfig = {
       method: 'POST',
       url,
@@ -386,7 +387,7 @@ export default class BackendServerComms {
         throw new Error(`Failed to generate hash: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      console.error(`${this.TAG}: Error generating hash:`, error.message || error);
+      log.core.error(`Error generating hash: ${error.message || error}`);
       throw error;
     }
   }

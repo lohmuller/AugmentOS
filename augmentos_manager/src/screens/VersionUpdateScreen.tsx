@@ -19,6 +19,7 @@ import InstallApkModule from '../bridge/InstallApkModule';
 import { saveSetting } from '../logic/SettingsHelper';
 import { Linking } from 'react-native';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface VersionUpdateScreenProps {
   route: {
@@ -32,8 +33,8 @@ interface VersionUpdateScreenProps {
 }
 
 const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
-                                                                   route
-                                                                 }) => {
+  route
+}) => {
   const { isDarkTheme, connectionError: initialConnectionError, localVersion: initialLocalVersion, cloudVersion: initialCloudVersion } = route.params;
   const navigation = useNavigation<NavigationProp<any>>();
   const [isLoading, setIsLoading] = useState(!initialLocalVersion && !initialConnectionError);
@@ -65,10 +66,10 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
   const getLocalVersion = () => {
     try {
       const version = Config.AUGMENTOS_VERSION;
-      console.log('Local version from env:', version);
+      log.app.info('Local version from env:', version);
       return version || null;
     } catch (error) {
-      console.error('Error getting local version:', error);
+      log.app.error('Error getting local version:', error);
       return null;
     }
   };
@@ -84,7 +85,7 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
       setLocalVersion(localVer);
 
       if (!localVer) {
-        console.error('Failed to get local version from env file');
+        log.app.error('Failed to get local version from env file');
         setConnectionError(true);
         setIsLoading(false);
         return;
@@ -95,14 +96,14 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
         onSuccess: (data) => {
           const cloudVer = data.version;
           setCloudVersion(cloudVer);
-          console.log(`Comparing local version (${localVer}) with cloud version (${cloudVer})`);
+          log.app.info(`Comparing local version (${localVer}) with cloud version (${cloudVer})`);
 
           // Compare versions using semver
           if (semver.lt(localVer, cloudVer)) {
-            console.log('A new version is available. Please update the app.');
+            log.app.info('A new version is available. Please update the app.');
             setIsVersionMismatch(true);
           } else {
-            console.log('Local version is up-to-date.');
+            log.app.info('Local version is up-to-date.');
             setIsVersionMismatch(false);
             // Only navigate back to home if no update is needed
             // This allows the app to proceed normally when up-to-date
@@ -113,13 +114,13 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
           setIsLoading(false);
         },
         onFailure: (errorCode) => {
-          console.error('Failed to fetch cloud version:', errorCode);
+          log.app.error('Failed to fetch cloud version:', errorCode);
           setConnectionError(true);
           setIsLoading(false);
         }
       });
     } catch (error) {
-      console.error('Error checking cloud version:', error);
+      log.app.error('Error checking cloud version:', error);
       setConnectionError(true);
       setIsLoading(false);
     }
@@ -135,7 +136,7 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
     //     // This would happen after the app restarts with the new version
     //   })
     //   .catch((error) => {
-    //     console.error('Error downloading update:', error);
+    //     log.app.error('Error downloading update:', error);
     //     Alert.alert(
     //       "Update Failed",
     //       "There was a problem downloading the update. Please try again.",
@@ -148,14 +149,14 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
 
     // Just send them to latest augmentos.org
     Linking.openURL('https://augmentos.org/install')
-    .catch((error) => {
-      console.error('Error opening installation website:', error);
-      showAlert(
-        "Browser Error",
-        "Could not open the installation website. Please visit https://augmentos.org/install manually.",
-        [{ text: "OK", onPress: () => {} }]
-      );
-    });
+      .catch((error) => {
+        log.app.error('Error opening installation website:', error);
+        showAlert(
+          "Browser Error",
+          "Could not open the installation website. Please visit https://augmentos.org/install manually.",
+          [{ text: "OK", onPress: () => { } }]
+        );
+      });
   };
 
   // Only check cloud version on mount if we don't have initial data
@@ -264,27 +265,27 @@ const VersionUpdateScreen: React.FC<VersionUpdateScreenProps> = ({
                   : 'Update AugmentOS'}
             </Button>
 
-          {isVersionMismatch &&
-            <View style={styles.skipButtonContainer}>
-             <Button
-               onPress={() => {
-                 // Save setting to ignore version checks until next app restart
-                 saveSetting('ignoreVersionCheck', true);
-                 console.log('Version check skipped until next app restart');
-                 // Skip directly to Home screen
-                 navigation.reset({
-                   index: 0,
-                   routes: [{ name: 'Home' }],
-                 });
-               }}
-               isDarkTheme={isDarkTheme}
-               iconName="skip-next"
-               disabled={false}>
-               Skip Update
-             </Button>
-            </View>
-            }                                                
-          </View>    
+            {isVersionMismatch &&
+              <View style={styles.skipButtonContainer}>
+                <Button
+                  onPress={() => {
+                    // Save setting to ignore version checks until next app restart
+                    saveSetting('ignoreVersionCheck', true);
+                    log.app.info('Version check skipped until next app restart');
+                    // Skip directly to Home screen
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'Home' }],
+                    });
+                  }}
+                  isDarkTheme={isDarkTheme}
+                  iconName="skip-next"
+                  disabled={false}>
+                  Skip Update
+                </Button>
+              </View>
+            }
+          </View>
         )}
       </View>
     </View>

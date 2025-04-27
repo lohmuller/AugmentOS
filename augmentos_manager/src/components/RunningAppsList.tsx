@@ -1,35 +1,36 @@
-import React, {useMemo, useState, useRef} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
+import React, { useMemo, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {useStatus} from '../providers/AugmentOSStatusProvider';
+import { useStatus } from '../providers/AugmentOSStatusProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import coreCommunicator from '../bridge/CoreCommunicator';
 import AppIcon from './AppIcon';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationProps } from './types';
+import { log } from '../utils/logger';
 
 interface RunningAppsListProps {
   isDarkTheme: boolean;
 }
 
-const RunningAppsList: React.FC<RunningAppsListProps> = ({isDarkTheme}) => {
-  const {status, updateAppStatus} = useStatus();
+const RunningAppsList: React.FC<RunningAppsListProps> = ({ isDarkTheme }) => {
+  const { status, updateAppStatus } = useStatus();
   const [_isLoading, setIsLoading] = useState(false);
   const textColor = isDarkTheme ? '#FFFFFF' : '#000000';
   const navigation = useNavigation<NavigationProps>();
   const scrollViewRef = useRef<ScrollView>(null);
 
   const stopApp = async (packageName: string) => {
-    console.log('STOP APP');
-    
+    log.app.info('STOP APP');
+
     updateAppStatus(packageName, false, false);
-    
+
     setIsLoading(true);
     try {
       await coreCommunicator.stopAppByPackageName(packageName);
     } catch (error) {
       updateAppStatus(packageName, true, true);
-      console.error('Stop app error:', error);
+      log.app.error('Stop app error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +54,7 @@ const RunningAppsList: React.FC<RunningAppsListProps> = ({isDarkTheme}) => {
 
   return (
     <View style={styles.appsContainer}>
-      <Text style={[styles.sectionTitle, {color: textColor}]}>
+      <Text style={[styles.sectionTitle, { color: textColor }]}>
         Active Apps ({runningApps.length})
       </Text>
       <View style={styles.listContainer}>
@@ -67,8 +68,8 @@ const RunningAppsList: React.FC<RunningAppsListProps> = ({isDarkTheme}) => {
               style={styles.appItemWrapper}>
               <LinearGradient
                 colors={['#56CCFE', '#FF8DF6', '#FFD04E']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={styles.appItem}>
                 <View style={styles.appContent}>
                   <AppIcon
@@ -78,7 +79,7 @@ const RunningAppsList: React.FC<RunningAppsListProps> = ({isDarkTheme}) => {
                     style={styles.appIcon}
                   />
                   <Text style={styles.appName}>{app.name || 'Convoscope'}</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => openAppSettings(app)}
                     style={styles.settingsButton}>
                     <Icon name="cog-outline" size={24} color="#000000" />
@@ -91,12 +92,12 @@ const RunningAppsList: React.FC<RunningAppsListProps> = ({isDarkTheme}) => {
           <View style={styles.noAppsContainer}>
             <LinearGradient
               colors={['#56CCFE', '#FF8DF6', '#FFD04E']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={styles.noAppsGradient}
             >
               <View style={styles.noAppsContent}>
-                <Text style={[styles.noAppsText, {color: '#000000'}]}>
+                <Text style={[styles.noAppsText, { color: '#000000' }]}>
                   Tap on an app below to start it.
                 </Text>
               </View>

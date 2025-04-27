@@ -1,5 +1,6 @@
 import React, { useEffect, ReactNode } from 'react';
 import { NativeEventEmitter, NativeModules, Alert } from 'react-native';
+import { log } from '../utils/logger';
 
 const { NotificationModule } = NativeModules;
 const notificationEmitter = new NativeEventEmitter(NotificationModule);
@@ -14,7 +15,7 @@ const NotificationListener: React.FC<NotificationListenerProps> = ({ children })
     const subscription = notificationEmitter.addListener('onNotificationReceived', (notificationText: string) => {
       // Display or handle the notification
       Alert.alert('New Notification', notificationText);
-      console.log('Received notification:', notificationText);
+      log.app.info('Received notification:', notificationText);
     });
 
     // Clean up the listener on unmount

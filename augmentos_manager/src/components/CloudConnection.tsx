@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useStatus } from '../providers/AugmentOSStatusProvider';
+import { log } from '../utils/logger';
 
 interface CloudConnectionProps {
   isDarkTheme: boolean;
@@ -12,7 +13,7 @@ const CloudConnection: React.FC<CloudConnectionProps> = ({ isDarkTheme }) => {
   const { status } = useStatus();
 
   useEffect(() => {
-    console.log('AugmentOS Status Updated:', JSON.stringify(status, null, 2));
+    log.app.info('AugmentOS Status Updated:', JSON.stringify(status, null, 2));
   }, [status]);
 
   /**

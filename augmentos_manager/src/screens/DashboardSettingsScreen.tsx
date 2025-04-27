@@ -21,6 +21,7 @@ import coreCommunicator from '../bridge/CoreCommunicator';
 import HeadUpAngleComponent from '../components/HeadUpAngleComponent.tsx';
 import BackendServerComms from '../backend_comms/BackendServerComms';
 import { Slider } from 'react-native-elements';
+import { log } from '../utils/logger';
 
 interface DashboardSettingsScreenProps {
   navigation: any;
@@ -98,7 +99,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
         setDashboardContent(contentSetting.selected);
       }
     } catch (error) {
-      console.error('Error fetching dashboard settings:', error);
+      log.app.error('Error fetching dashboard settings:', error);
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +114,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
         value: value
       });
     } catch (error) {
-      console.error('Error updating dashboard content:', error);
+      log.app.error('Error updating dashboard content:', error);
       Alert.alert('Error', 'Failed to update dashboard content');
       setDashboardContent(dashboardContent);
     } finally {
@@ -160,7 +161,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
             <Text style={styles.pickerTitle}>
               Select Dashboard Content
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => !isUpdating && setShowContentPicker(false)}
               style={[styles.closeButton, isUpdating && styles.disabledButton]}
               disabled={isUpdating}
@@ -210,7 +211,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
           Dashboard Settings
         </Text>
       </View>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollViewContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -226,13 +227,12 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
               </Text>
               {status.glasses_info?.model_name && (
                 <Text style={styles.value}>
-                  {`Show a summary of your phone notifications when you ${
-                    status.glasses_info?.model_name
+                  {`Show a summary of your phone notifications when you ${status.glasses_info?.model_name
                       .toLowerCase()
                       .includes('even')
                       ? 'look up'
                       : 'tap your smart glasses'
-                  }.`}
+                    }.`}
                 </Text>
               )}
             </View>
@@ -289,7 +289,7 @@ const DashboardSettingsScreen: React.FC<DashboardSettingsScreenProps> = ({
           <Text style={styles.sectionTitle}>
             Display Settings
           </Text>
-          
+
           {/* Head-Up Angle Setting */}
           <TouchableOpacity
             style={[

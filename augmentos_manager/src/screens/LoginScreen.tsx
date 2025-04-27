@@ -24,6 +24,7 @@ import AppleIcon from '../icons/AppleIcon';
 import { supabase } from '../supabaseClient';
 import { Linking } from 'react-native';
 import showAlert from '../utils/AlertUtils';
+import { log } from '../utils/logger';
 
 interface LoginScreenProps {
   navigation: any;
@@ -81,10 +82,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   // Add a listener for app state changes to detect when the app comes back from background
   useEffect(() => {
     const handleAppStateChange = (nextAppState: any) => {
-      console.log('App state changed to:', nextAppState);
-      // If app comes back to foreground, hide the loading overlay
+      log.app.info('App state changed to:', nextAppState);
       if (nextAppState === 'active' && isAuthLoading) {
-        console.log('App became active, hiding auth overlay');
+        log.app.info('App became active, hiding auth overlay');
         setIsAuthLoading(false);
         authOverlayOpacity.setValue(0);
       }
@@ -100,7 +100,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     const handleDeepLink = async (event: any) => {
-      console.log('Deep link URL:', event.url);
+      log.app.info('Deep link URL:', event.url);
       const authParams = parseAuthParams(event.url);
       if (authParams && authParams.access_token && authParams.refresh_token) {
         try {
@@ -110,18 +110,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             refresh_token: authParams.refresh_token,
           });
           if (error) {
-            console.error('Error setting session:', error);
+            log.app.error('Error setting session:', error);
           } else {
-            console.log('Session updated:', data.session);
+            log.app.info('Session updated:', data.session);
           }
         } catch (err) {
-          console.error('Exception during setSession:', err);
+          log.app.error('Exception during setSession:', err);
         }
       }
 
       // Always hide the loading overlay when we get any deep link callback
       // This ensures it gets hidden even if auth was not completed
-      console.log('Deep link received, hiding auth overlay');
+      log.app.info('Deep link received, hiding auth overlay');
       setIsAuthLoading(false);
       authOverlayOpacity.setValue(0);
     };
@@ -129,7 +129,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     const linkingSubscription = Linking.addEventListener('url', handleDeepLink);
     // Handle deep links that opened the app
     Linking.getInitialURL().then(url => {
-      console.log('Initial URL:', url);
+      log.app.info('Initial URL:', url);
       if (url) {
         handleDeepLink({ url });
       }
@@ -137,7 +137,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     // Add this to see if linking is working at all
     Linking.canOpenURL('com.augmentos://auth/callback').then(supported => {
-      console.log('Can open URL:', supported);
+      log.app.info('Can open URL:', supported);
     });
 
     return () => {
@@ -175,7 +175,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       // Automatically hide the overlay after 5 seconds regardless of what happens
       // This is a failsafe in case the auth flow is interrupted
       setTimeout(() => {
-        console.log('Auth flow failsafe timeout - hiding loading overlay');
+        log.app.info('Auth flow failsafe timeout - hiding loading overlay');
         setIsAuthLoading(false);
         authOverlayOpacity.setValue(0);
       }, 5000);
@@ -190,7 +190,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
       // 2) If there's an error, handle it
       if (error) {
-        console.error('Supabase Google sign-in error:', error);
+        log.app.error('Supabase Google sign-in error:', error);
         showAlert('Authentication Error', error.message);
         setIsAuthLoading(false);
         authOverlayOpacity.setValue(0);
@@ -199,7 +199,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
       // 3) If we get a `url` back, we must open it ourselves in RN
       if (data?.url) {
-        console.log("Opening browser with:", data.url);
+        log.app.info("Opening browser with:", data.url);
         await Linking.openURL(data.url);
 
         // Directly hide the loading overlay when we leave the app
@@ -209,13 +209,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       }
 
     } catch (err) {
-      console.error('Google sign in failed:', err);
+      log.app.error('Google sign in failed:', err);
       showAlert('Authentication Error', 'Google sign in failed. Please try again.');
       setIsAuthLoading(false);
       authOverlayOpacity.setValue(0);
     }
 
-    console.log('signInWithOAuth call finished');
+    log.app.info('signInWithOAuth call finished');
   };
 
 
@@ -231,30 +231,30 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
       // If there's an error, handle it
       if (error) {
-        console.error('Supabase Apple sign-in error:', error);
+        log.app.error('Supabase Apple sign-in error:', error);
         showAlert('Authentication Error', error.message);
         return;
       }
 
       // If we get a `url` back, we must open it ourselves in React Native
       if (data?.url) {
-        console.log("Opening browser with:", data.url);
+        log.app.info("Opening browser with:", data.url);
         await Linking.openURL(data.url);
       }
 
       // After returning from the browser, check the session
       const { data: sessionData } = await supabase.auth.getSession();
-      console.log('Current session after Apple sign-in:', sessionData.session);
+      log.app.info('Current session after Apple sign-in:', sessionData.session);
 
       // Note: The actual navigation to SplashScreen will be handled by 
       // the onAuthStateChange listener you already have in place
 
     } catch (err) {
-      console.error('Apple sign in failed:', err);
+      log.app.error('Apple sign in failed:', err);
       showAlert('Authentication Error', 'Apple sign in failed. Please try again.');
     }
 
-    console.log('signInWithOAuth for Apple finished');
+    log.app.info('signInWithOAuth for Apple finished');
   };
 
   const handleEmailSignUp = async (email: string, password: string) => {
@@ -280,11 +280,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       } else if (!data.session) {
         showAlert("Success!", "Please check your inbox for email verification!");
       } else {
-        console.log("Sign-up successful:", data);
+        log.app.info("Sign-up successful:", data);
         navigation.replace("SplashScreen");
       }
     } catch (err) {
-      console.error("Error during sign-up:", err);
+      log.app.error("Error during sign-up:", err);
       showAlert("Error", "Something went wrong. Please try again.");
     } finally {
       setIsFormLoading(false);
@@ -303,7 +303,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       showAlert("Error", error.message);
       // Handle sign-in error
     } else {
-      console.log('Sign-in successful:', data);
+      log.app.info('Sign-in successful:', data);
       //navigation.replace('SplashScreen');
     }
     setIsFormLoading(false)
@@ -330,7 +330,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('onAuthStateChange event:', event, session);
+      log.app.info('onAuthStateChange event:', event, session);
       if (session) {
         // If session is present, user is authenticated
         // Hide the auth loading overlay after a short delay
@@ -351,7 +351,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     const unsubscribe = navigation.addListener('focus', () => {
       // If we're coming back to this screen and the auth overlay is still showing, hide it
       if (isAuthLoading) {
-        console.log('Screen focused, hiding auth overlay if showing');
+        log.app.info('Screen focused, hiding auth overlay if showing');
         Animated.timing(authOverlayOpacity, {
           toValue: 0,
           duration: 300,

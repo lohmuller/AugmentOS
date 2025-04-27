@@ -20,6 +20,7 @@ import BackendServerComms from '../backend_comms/BackendServerComms';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { getAppImage } from '../logic/getAppImage';
 import GlobalEventEmitter from '../logic/GlobalEventEmitter';
+import { log } from '../utils/logger';
 
 type AppSettingsProps = NativeStackScreenProps<RootStackParamList, 'AppSettings'> & {
   isDarkTheme: boolean;
@@ -44,9 +45,9 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
   // Handle app start/stop actions with debouncing
   const handleStartStopApp = async () => {
     if (!appInfo) return;
-    
-    console.log(`${appInfo.is_running ? 'Stopping' : 'Starting'} app: ${packageName}`);
-    
+
+    log.app.info(`${appInfo.is_running ? 'Stopping' : 'Starting'} app: ${packageName}`);
+
     try {
       if (appInfo.is_running) {
         // Immediately update the app status locally
@@ -66,13 +67,13 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
       } else {
         updateAppStatus(packageName, false, false);
       }
-      console.error(`Error ${appInfo.is_running ? 'stopping' : 'starting'} app:`, error);
+      log.app.error(`Error ${appInfo.is_running ? 'stopping' : 'starting'} app:`, error);
     }
   };
 
   const handleUninstallApp = () => {
-    console.log(`Uninstalling app: ${packageName}`);
-    
+    log.app.info(`Uninstalling app: ${packageName}`);
+
     Alert.alert(
       "Uninstall App",
       `Are you sure you want to uninstall ${appInfo?.name || appName}?`,
@@ -81,8 +82,8 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
           text: "Cancel",
           style: "cancel"
         },
-        { 
-          text: "Uninstall", 
+        {
+          text: "Uninstall",
           style: "destructive",
           onPress: async () => {
             try {
@@ -91,23 +92,23 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
               if (appInfo?.is_running) {
                 await backendServerComms.stopApp(packageName);
               }
-              
+
               // Then uninstall it
               await backendServerComms.uninstallApp(packageName);
-              
+
               // Show success message
-              GlobalEventEmitter.emit('SHOW_BANNER', { 
-                message: `${appInfo?.name || appName} has been uninstalled successfully`, 
-                type: "success" 
+              GlobalEventEmitter.emit('SHOW_BANNER', {
+                message: `${appInfo?.name || appName} has been uninstalled successfully`,
+                type: "success"
               });
-              
+
               // Navigate back to the previous screen
               navigation.goBack();
             } catch (error: any) {
-              console.error('Error uninstalling app:', error);
-              GlobalEventEmitter.emit('SHOW_BANNER', { 
-                message: `Error uninstalling app: ${error.message || 'Unknown error'}`, 
-                type: "error" 
+              log.app.error('Error uninstalling app:', error);
+              GlobalEventEmitter.emit('SHOW_BANNER', {
+                message: `Error uninstalling app: ${error.message || 'Unknown error'}`,
+                type: "error"
               });
             } finally {
               setIsUninstalling(false);
@@ -157,10 +158,10 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
   const fetchUpdatedSettingsInfo = async () => {
     try {
       const data = await backendServerComms.getTpaSettings(packageName);
-      console.log("\n\n\nGOT TPA SETTING INFO:");
-      console.log(JSON.stringify(data));
-      console.log("\n\n\n");
-      
+      log.app.info("\n\n\nGOT TPA SETTING INFO:");
+      log.app.info(JSON.stringify(data));
+      log.app.info("\n\n\n");
+
       // If no data is returned from the server, create a minimal app info object
       if (!data) {
         setServerAppInfo({
@@ -172,7 +173,7 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
         });
         return;
       }
-      
+
       setServerAppInfo(data);
       // Initialize local state using the "selected" property.
       if (data.settings && Array.isArray(data.settings)) {
@@ -184,7 +185,7 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
         });
         setSettingsState(initialState);
       }
-      
+
       // Check if we should auto-redirect to webview
       // Only redirect if webviewURL exists AND we're not coming from the webview already
       const fromWebView = route.params.fromWebView === true;
@@ -198,7 +199,7 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
         });
       }
     } catch (err) {
-      console.error('Error fetching TPA settings:', err);
+      log.app.error('Error fetching TPA settings:', err);
       // If there's an error, create a minimal app info object
       setServerAppInfo({
         name: appInfo?.name || appName,
@@ -212,7 +213,7 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
 
   // When a setting changes, update local state and send the full updated settings payload.
   const handleSettingChange = (key: string, value: any) => {
-    console.log(`Changing ${key} to ${value}`);
+    log.app.info(`Changing ${key} to ${value}`);
     setSettingsState((prevState) => ({
       ...prevState,
       [key]: value,
@@ -226,10 +227,10 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
 
     backendServerComms.updateTpaSetting(packageName, { key, value })
       .then((data) => {
-        console.log('Server update response:', data);
+        log.app.info('Server update response:', data);
       })
       .catch((error) => {
-        console.error('Error updating setting on server:', error);
+        log.app.error('Error updating setting on server:', error);
       });
   };
 
@@ -335,9 +336,9 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
   if (!serverAppInfo || !appInfo) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
-        <LoadingOverlay 
-          message={`Loading ${appName} settings...`} 
-          isDarkTheme={isDarkTheme} 
+        <LoadingOverlay
+          message={`Loading ${appName} settings...`}
+          isDarkTheme={isDarkTheme}
         />
       </View>
     );
@@ -346,9 +347,9 @@ const AppSettings: React.FC<AppSettingsProps> = ({ route, navigation, isDarkThem
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.backgroundColor }]}>
       {isUninstalling && (
-        <LoadingOverlay 
-          message={`Uninstalling ${appInfo?.name || appName}...`} 
-          isDarkTheme={isDarkTheme} 
+        <LoadingOverlay
+          message={`Uninstalling ${appInfo?.name || appName}...`}
+          isDarkTheme={isDarkTheme}
         />
       )}
       <ScrollView contentContainerStyle={styles.mainContainer}>
