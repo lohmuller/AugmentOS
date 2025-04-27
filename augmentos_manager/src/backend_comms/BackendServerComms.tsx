@@ -75,7 +75,7 @@ export default class BackendServerComms {
         callback.onFailure(response.status);
       }
     } catch (error: any) {
-      log.core.error(`${this.TAG}: Network Error -`, error.message || error);
+      log.app.error(`${this.TAG}: Network Error -`, error.message || error);
       callback.onFailure(-1);
     }
   }
@@ -91,7 +91,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/app/error-report`;
-    log.core.info('Sending error report to:', url);
+    log.app.info('Sending error report to:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -111,7 +111,7 @@ export default class BackendServerComms {
         throw new Error(`Error sending report: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`${this.TAG}: Error sending report -`, error.message || error);
+      log.app.error(`${this.TAG}: Error sending report -`, error.message || error);
       throw error;
     }
   }
@@ -128,10 +128,10 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info("GOT A RESPONSE!!!")
-        log.core.info("\n\n");
-        log.core.info(JSON.stringify(response.data));
-        log.core.info("\n\n\n\n");
+        log.app.info("GOT A RESPONSE!!!")
+        log.app.info("\n\n");
+        log.app.info(JSON.stringify(response.data));
+        log.app.info("\n\n\n\n");
         // Store the token internally
         this.setCoreToken(response.data.coreToken);
         return response.data.coreToken;
@@ -149,7 +149,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/tpasettings/${tpaName}`;
-    log.core.info('Fetching TPA settings from:', url);
+    log.app.info('Fetching TPA settings from:', url);
 
     const config: AxiosRequestConfig = {
       method: 'GET',
@@ -163,13 +163,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info('Received TPA settings:', response.data);
+        log.app.info('Received TPA settings:', response.data);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error('Error fetching TPA settings:', error.message || error);
+      log.app.error('Error fetching TPA settings:', error.message || error);
       throw error;
     }
   }
@@ -181,7 +181,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/tpasettings/${tpaName}`;
-    log.core.info('Updating TPA settings via:', url);
+    log.app.info('Updating TPA settings via:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -196,13 +196,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info('Updated TPA settings:', response.data);
+        log.app.info('Updated TPA settings:', response.data);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error('Error updating TPA settings:', error.message || error);
+      log.app.error('Error updating TPA settings:', error.message || error);
       throw error;
     }
   }
@@ -218,7 +218,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/apps/${packageName}/start`;
-    log.core.info('Starting app:', packageName);
+    log.app.info('Starting app:', packageName);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -232,14 +232,15 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info('App started successfully:', packageName);
+        log.app.info('App started successfully:', packageName);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error('Error starting app:', error.message || error);
-      GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' });
+      //console.error('Error starting app:', error.message || error);
+      //GlobalEventEmitter.emit('SHOW_BANNER', { message: 'Error starting app: ' + error.message || error, type: 'error' })
+      GlobalEventEmitter.emit('SHOW_BANNER', { message: `Could not connect to ${packageName}`, type: "error" });
       throw error;
     }
   }
@@ -255,7 +256,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/apps/${packageName}/stop`;
-    log.core.info('Stopping app:', packageName);
+    log.app.info('Stopping app:', packageName);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -269,13 +270,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info('App stopped successfully:', packageName);
+        log.app.info('App stopped successfully:', packageName);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error('Error stopping app:', error.message || error);
+      log.app.error('Error stopping app:', error.message || error);
       throw error;
     }
   }
@@ -291,7 +292,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.appStoreUrl}/api/apps/uninstall/${packageName}`;
-    log.core.info('Uninstalling app:', packageName);
+    log.app.info('Uninstalling app:', packageName);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -305,13 +306,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data) {
-        log.core.info('App uninstalled successfully:', packageName);
+        log.app.info('App uninstalled successfully:', packageName);
         return response.data;
       } else {
         throw new Error(`Bad response: ${response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error('Error uninstalling app:', error.message || error);
+      log.app.error('Error uninstalling app:', error.message || error);
       throw error;
     }
   }
@@ -328,7 +329,7 @@ export default class BackendServerComms {
     }
 
     const url = `${this.serverUrl}/api/auth/generate-webview-token`;
-    log.core.info('Requesting webview token for:', packageName, 'at URL:', url);
+    log.app.info('Requesting webview token for:', packageName, 'at URL:', url);
 
     const config: AxiosRequestConfig = {
       method: 'POST',
@@ -343,13 +344,13 @@ export default class BackendServerComms {
     try {
       const response = await axios(config);
       if (response.status === 200 && response.data.success && response.data.token) {
-        log.core.info(`Received temporary webview token for ${packageName}`);
+        log.app.info(`Received temporary webview token for ${packageName}`);
         return response.data.token;
       } else {
         throw new Error(`Failed to generate webview token: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`${this.TAG}: Error generating webview token -`, error.message || error);
+      log.app.error(`${this.TAG}: Error generating webview token -`, error.message || error);
       // Consider more specific error handling based on response status if available
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(`Failed to generate webview token: ${error.response.data?.error || error.message}`);
@@ -386,7 +387,7 @@ export default class BackendServerComms {
         throw new Error(`Failed to generate hash: ${response.data.error || response.statusText}`);
       }
     } catch (error: any) {
-      log.core.error(`${this.TAG}: Error generating hash:`, error.message || error);
+      log.app.error(`${this.TAG}: Error generating hash:`, error.message || error);
       throw error;
     }
   }
