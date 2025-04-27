@@ -5,17 +5,19 @@ export enum LogLevel {
     ERROR = 'ERROR'
 }
 
-type LogContext = 'APP' | 'CORE' | 'BLE' | 'CLOUD';
+// Define os contextos uma única vez
+export const AVAILABLE_CONTEXTS = ['APP', 'CORE', 'BLE', 'CLOUD'] as const;
+type LogContext = typeof AVAILABLE_CONTEXTS[number];
 
 class Logger {
     private static instance: Logger;
     private currentLogLevel: LogLevel = __DEV__ ? LogLevel.DEBUG : LogLevel.INFO;
     private contexts: Record<LogContext, any> = {} as Record<LogContext, any>;
+    private allowedContexts: LogContext[] = [...AVAILABLE_CONTEXTS];
 
     private constructor() {
         // Create contexts dynamically
-        const contexts: LogContext[] = ['APP', 'CORE', 'BLE', 'CLOUD'];
-        contexts.forEach(context => {
+        AVAILABLE_CONTEXTS.forEach((context: LogContext) => {
             this.contexts[context] = {
                 debug: (message: string) => this.log(LogLevel.DEBUG, message, context),
                 info: (message: string) => this.log(LogLevel.INFO, message, context),
@@ -23,6 +25,10 @@ class Logger {
                 error: (message: string) => this.log(LogLevel.ERROR, message, context)
             };
         });
+    }
+
+    public setAllowedContexts(contexts: LogContext[]) {
+        this.allowedContexts = contexts;
     }
 
     public static getInstance(): Logger {
@@ -42,8 +48,9 @@ class Logger {
         return levels.indexOf(level) >= levels.indexOf(this.currentLogLevel);
     }
 
-    private log(level: LogLevel, message: string, context: string) {
+    private log(level: LogLevel, message: string, context: LogContext) {
         if (!this.shouldLog(level)) return;
+        if (!this.allowedContexts.includes(context)) return;
 
         const formattedMessage = this.formatMessage(level, message, context);
 
@@ -62,23 +69,6 @@ class Logger {
                 console.error(formattedMessage);
                 break;
         }
-    }
-
-    // Base methods
-    public debug(message: string) {
-        this.log(LogLevel.DEBUG, message, 'DEBUG');
-    }
-
-    public info(message: string) {
-        this.log(LogLevel.INFO, message, 'INFO');
-    }
-
-    public warn(message: string) {
-        this.log(LogLevel.WARN, message, 'WARN');
-    }
-
-    public error(message: string) {
-        this.log(LogLevel.ERROR, message, 'ERROR');
     }
 
     // Context getters

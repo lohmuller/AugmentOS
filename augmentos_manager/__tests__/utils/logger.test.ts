@@ -1,7 +1,9 @@
-import { log, LogLevel } from '../../src/utils/logger';
+import { log, LogLevel, AVAILABLE_CONTEXTS } from '../../src/utils/logger';
 
 describe('Logger', () => {
     beforeEach(() => {
+        log.setLogLevel(LogLevel.DEBUG);
+        log.setAllowedContexts([...AVAILABLE_CONTEXTS]);
         // Clear all mocks before each test
         jest.clearAllMocks();
         // Spy on console methods
@@ -16,12 +18,31 @@ describe('Logger', () => {
         jest.restoreAllMocks();
     });
 
+    describe('Context Getters', () => {
+        it('should have getters for all contexts', () => {
+            AVAILABLE_CONTEXTS.forEach((context: typeof AVAILABLE_CONTEXTS[number]) => {
+                const contextKey = context.toLowerCase() as keyof typeof log;
+                const contextGetter = log[contextKey];
+                expect(contextGetter).toBeDefined();
+                expect(contextGetter.debug).toBeDefined();
+                expect(contextGetter.info).toBeDefined();
+                expect(contextGetter.warn).toBeDefined();
+                expect(contextGetter.error).toBeDefined();
+            });
+        });
+
+        it('should have non-context properties', () => {
+            expect(log.setLogLevel).toBeDefined();
+            expect(log.setAllowedContexts).toBeDefined();
+        });
+    });
+
     describe('Basic Logging', () => {
         it('should log messages at all levels', () => {
-            log.debug('Basic debug message');
-            log.info('Basic info message');
-            log.warn('Basic warning message');
-            log.error('Basic error message');
+            log.app.debug('Basic debug message');
+            log.app.info('Basic info message');
+            log.app.warn('Basic warning message');
+            log.app.error('Basic error message');
 
             expect(console.debug).toHaveBeenCalled();
             expect(console.info).toHaveBeenCalled();
@@ -111,6 +132,35 @@ describe('Logger', () => {
             expect(console.info).toHaveBeenCalled();
             expect(console.warn).toHaveBeenCalled();
             expect(console.error).toHaveBeenCalled();
+        });
+    });
+
+    describe('Allowed Contexts', () => {
+        it('should respect allowed contexts', () => {
+            log.setAllowedContexts(['APP']);
+            const consoleSpy = jest.spyOn(console, 'info');
+
+            log.app.info('test');
+            log.core.info('test');
+
+            expect(consoleSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should allow changing allowed contexts', () => {
+            log.setAllowedContexts(['APP']);
+            const consoleSpy = jest.spyOn(console, 'info');
+
+            log.app.info('test');
+            log.core.info('test');
+
+            expect(consoleSpy).toHaveBeenCalledTimes(1);
+
+            log.setAllowedContexts(['APP', 'CORE']);
+
+            log.app.info('test');
+            log.core.info('test');
+
+            expect(consoleSpy).toHaveBeenCalledTimes(3);
         });
     });
 }); 
