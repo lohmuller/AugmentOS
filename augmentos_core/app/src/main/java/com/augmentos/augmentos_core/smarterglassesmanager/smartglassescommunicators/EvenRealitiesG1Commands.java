@@ -22,10 +22,11 @@ public class EvenRealitiesG1Commands {
         BMP_CRC(22),
         CLEAR_SCREEN(24),
         QUICK_NOTE(30),
-        FIRMWARE_INFO(35),
+        FIRMWARE_INFO_REQ(35), //@TODO Keep 2? or join into one?
+        FIRMWARE_INFO_RES(110), //@TODO Keep 2? or join into one?
         HEARTBEAT(37),
         WEAR_DETECTION(39),
-        BATTERY_INFO(44),
+        BATTERY_INFO(44), //@TODO rename, contains more than battery info
         UPTIME(55),
         USAGE_INFO(62),
         DISPLAY_NOTIFICATION(75),
@@ -94,8 +95,11 @@ public class EvenRealitiesG1Commands {
         // Command specific types
         public enum ParameterType {
             // Generic types
-            STATUS, // SUCCESS/FAIL
+            BOOLEAN,
             UNKNOWN,
+            STRING,
+            INTEGER,
+            BYTE,
 
             // Command specific types
             BRIGHTNESS_VALUE,      // Value from 0-255
