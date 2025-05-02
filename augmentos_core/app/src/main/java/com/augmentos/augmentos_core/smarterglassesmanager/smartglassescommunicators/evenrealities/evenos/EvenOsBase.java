@@ -1,28 +1,7 @@
-public abstract class EvenOsBase {
+import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
 
-    //TODO remove this enum?
-    public enum CommandId {
-        SET_BRIGHTNESS,
-        SET_SILENT_MODE,
-        SET_NOTIFICATION_CONFIG,
-        SET_DASHBOARD_MODE,
-        MIC_ENABLE,
-        BMP_DISPLAY,
-        BMP_CRC,
-        CLEAR_SCREEN,
-        QUICK_NOTE,
-        FIRMWARE_INFO, 
-        HEARTBEAT,
-        WEAR_DETECTION,
-        BATTERY_INFO, 
-        UPTIME,
-        USAGE_INFO,
-        DISPLAY_NOTIFICATION,
-        INIT,
-        TEXT_COMMMAND,
-        AUDIO_STREAM,
-        STATES_CHANGE;
-    }
+public abstract class EvenOsBase {
 
     //Convert enum to class?
     public enum DashboardMode {
@@ -34,7 +13,7 @@ public abstract class EvenOsBase {
         public int getValue() {return value;}
     }
 
-    //Convert enum to class?
+    //Convert enum to class? 
     public enum DashboardSubMode {
         NOTES(0),
         STOCK(1),
@@ -65,11 +44,13 @@ public abstract class EvenOsBase {
     EvenOsCommand getBatteryInfo();
     EvenOsCommand getDeviceUptime();
     EvenOsCommand getUsageInfo();
+    Function<byte[], T> onDoubleTap(Sides side);
+    Function<byte[], T> onSingleTap(Sides side);
+    Function<byte[], T> onTripleTap(Sides side);
+    Function<byte[], T> onLongPress(Sides side);
 
 }
 
-import java.util.function.Function;
-import java.util.concurrent.CompletableFuture;
 
 public class EvenOsCommand {
 

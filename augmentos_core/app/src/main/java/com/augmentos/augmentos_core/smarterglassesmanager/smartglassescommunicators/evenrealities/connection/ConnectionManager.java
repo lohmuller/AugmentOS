@@ -1,12 +1,8 @@
-/**
-Essa classe e responsavel pelo envio de comandos, qual lado
-e tambem oferecer o await de resposta (com listener)
- */
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import CommandQueue;
-import BleConfig;
+import java.util.concurrent.TimeUnit;
 
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.BleConfig;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.Connection;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsCommand;
@@ -49,6 +45,17 @@ public class ConnectionManager {
         this.leftConnection.setRxDataListener((data) -> responseParser(data, "LEFT"));
         this.rightConnection.setRxDataListener((data) -> responseParser(data, "RIGHT"));
     }
+
+
+    public void destroy() {
+        this.leftConnection.disconnect();
+        this.rightConnection.disconnect();
+    }
+
+    private void setupHeartbeat() {
+        //@TODO: implement heartbeat response/reply handler?
+    }
+
     /**
      * Envia um comando para o dispositivo e retorna a resposta
      * @param sendCommand
@@ -75,6 +82,11 @@ public class ConnectionManager {
             }
         }
         return sendCommand.future;
+    }
+
+    public <T> T sendAndWait(EvenOsCommand<T> command, long timeoutMillis) throws Exception {
+        CompletableFuture<T> future = sendCommand(command);
+        return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
     }
     
 

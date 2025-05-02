@@ -447,5 +447,30 @@ public class Even_Os_1_5_0 implements EvenOsBase {
         });
     }
 
+    public Function<byte[], T> onDoubleTap(Sides side) {
+        return (byte[] data) -> {
+            return null;
+        };
+    }
+    
+    public Function<byte[], T> onSingleTap(Sides side) {
+        return (byte[] data) -> {
+            return null;
+        };
+    }
+
+    public Function<byte[], T> onTripleTap(Sides side) {
+        return (byte[] data) -> {
+            return null;
+        };
+    }
+
+    public Function<byte[], T> onLongPress(Sides side) {
+        return (byte[] data) -> {
+            return null;
+        };
+    }
+    
+
 
 }

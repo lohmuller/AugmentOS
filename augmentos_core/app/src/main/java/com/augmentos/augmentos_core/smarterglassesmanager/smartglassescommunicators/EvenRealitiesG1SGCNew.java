@@ -5,22 +5,45 @@ import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicat
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsFirmwareFactory;
 
 import java.util.concurrent.CompletableFuture;
+import org.greenrobot.eventbus.EventBus;
 
-public class G1Adapter extends SmartGlassesCommunicator {
+public class EvenRealitiesG1SGCNew extends SmartGlassesCommunicator {
 
     private final EvenOsBase evenOsApi;
     private final ConnectionManager connectionManager;
+    private ScheduledFuture<?> batteryMonitoringFuture;
 
-
-    public G1Device(Context context, SmartGlassesDevice smartGlassesDevice) {
+    public EvenRealitiesG1SGCNew(Context context, SmartGlassesDevice smartGlassesDevice) {
         super();
         this.connectionManager = new ConnectionManager(context, smartGlassesDevice);
         this.evenOsApi = new EvenOs_1_5_0();
     }
 
+    private void startBatteryMonitoring() {
+        batteryMonitoringFuture = scheduler.scheduleAtFixedRate(() -> {
+            connectionManager
+                .sendCommand(evenOsApi.getBatteryInfo())
+                .thenAccept(result -> {
+                    int minBatteryLevel = Math.min(result.leftBatteryLevel, result.rightBatteryLevel);
+                    //@TODO: Glasses charging state True/False 
+                    //@TODO: Case charging state is true/false
+                    //@TODO: Case Battery level 
+                    EventBus.getDefault().post(new BatteryLevelEvent(minBatteryLevel));
+                    if (minBatteryLevel < 10 && batteryMonitoringFuture != null) {
+                        batteryMonitoringFuture.cancel(false);
+                    }
+                })
+                .exceptionally(ex -> {
+                    ex.printStackTrace();
+                    return null;
+                });
+        }, 0, 1, TimeUnit.MINUTES); // 1 minute
+    }
+
     @Override
     public void connectToSmartGlasses() {
         this.connectionManager.init();
+        this.startBatteryMonitoring();
      }
 
     @Override
@@ -30,9 +53,8 @@ public class G1Adapter extends SmartGlassesCommunicator {
 
     @Override
     public void blankScreen() {
-        this.connectionManager.sendCommand(this.evenOsApi.exitApp()).thenAccept(result -> {
-            System.out.println("response: " + result);
-        });
+        Object result = this.connectionManager.sendAndWait(this.evenOsApi.exitApp(), 1000);
+        System.out.println("response: " + result);
     }
 
     @Override
@@ -47,9 +69,8 @@ public class G1Adapter extends SmartGlassesCommunicator {
 
     @Override
     public void displayTextWall(String text) {
-        this.connectionManager.sendCommand(this.evenOsApi.sendText(text)).thenAccept(result -> {
-            System.out.println("response: " + result);
-        });
+        Object result = this.connectionManager.sendAndWait(this.evenOsApi.sendText(text), 1000);
+        System.out.println("response: " + result);
     }
 
     @Override
@@ -147,7 +168,8 @@ public class G1Adapter extends SmartGlassesCommunicator {
 
     @Override
     public void updateGlassesHeadUpAngle(int headUpAngle) {
-        // TODO: Implement head up angle update command using firmware
+        Object result = this.connectionManager.sendAndWait(this.evenOsApi.setHeadUpAngle(headUpAngle), 1000);
+        System.out.println("response: " + result);
     }
 
     @Override
