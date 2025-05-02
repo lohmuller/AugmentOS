@@ -74,7 +74,7 @@ public class ConnectionManager {
                 this.rightConnection.send(packet);
             }
         }
-        return command.future;
+        return sendCommand.future;
     }
     
 
