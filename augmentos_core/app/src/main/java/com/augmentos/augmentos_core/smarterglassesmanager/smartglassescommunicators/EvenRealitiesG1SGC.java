@@ -427,7 +427,7 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    new Handler(Looper.getMainLooper()).post(() -> init(gatt));
+                    new Handler(Looper.getMainLooper()).post(() -> initG1s(gatt));
                 }
             }
 
