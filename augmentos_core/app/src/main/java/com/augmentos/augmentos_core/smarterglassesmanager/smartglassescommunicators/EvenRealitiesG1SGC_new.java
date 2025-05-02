@@ -1,57 +1,27 @@
-// Vai ter aqui a classe principal do oculos smartglasses G1
-// Vai ter tambem aqui um historico de comandos,
-// o constructor vai esperar dois tipos de classes do tipo ConnectionInterface
-// um eh o lado esquerdo, e outro eh o lado direito
-// essa ckasse aqui vai ser tipo o bridge, saber qual firmware esta usando,
-// disponibilizar os commandos,
-// usar os commands e historico, para gerenciar O retorno... talvez colocar la um lado escutando a conexao
-// tipo vai ter tipo uma funcao assim, que fica la escutando os dois lados... quando vir, vai vir em bytes...
-// talvez essa classe vai ser tipo um pub/sub? nao sei...
-// queria fazer algo aqui que seria a interface talvez do AugmentOS... nao sei... se coloco ja os commandos aqui tambem...
-// mas queria deixar os commandos na interface do firmware (base)
-
-
 package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities;
 
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.Connection;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsFirmware;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.EvenOsConnection;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsFirmwareFactory;
 
 import java.util.concurrent.CompletableFuture;
 
 public class G1Adapter extends SmartGlassesCommunicator {
 
-    private final EvenOsFirmware firmware;
-    private final Connection leftConnection;
-    private final Connection rightConnection;
+    private final EvenOsBase evenOsApi;
+    private final ConnectionManager connectionManager;
 
 
     public G1Device(Context context, SmartGlassesDevice smartGlassesDevice) {
         super();
-        this.context = context;
-        this.smartGlassesDevice = smartGlassesDevice;
-
-        UartServiceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-        uartTxCharUuid = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
-        uartRxCharUuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
-        mtu = 512;
-        BleConfig config = new BleConfig(UartServiceUuid, uartTxCharUuid, uartRxCharUuid, mtu);
-
-        this.leftConnection = new Connection(context, smartGlassesDevice.getLeftDevice(), config);
-        this.rightConnection = new Connection(context, smartGlassesDevice.getRightDevice(), config);
-    }
-
-    public G1Device(Connection leftConnection, Connection rightConnection) {
-        // Inicializa com o firmware correto (você pode melhorar para detectar a versão)
-        this.leftConnection = leftConnection;
-        this.rightConnection = rightConnection;
-        this.firmware = EvenOsFirmwareFactory.create(leftConnection, rightConnection);
+        this.connectionManager = new ConnectionManager(context, smartGlassesDevice);
+        this.evenOsApi = new EvenOs_1_5_0();
     }
 
     @Override
     public void connectToSmartGlasses() {
-        // TODO: Implement connection logic using leftConnection and rightConnection
-    }
+        this.connectionManager.init();
+     }
 
     @Override
     public void findCompatibleDeviceNames() {
@@ -60,18 +30,14 @@ public class G1Adapter extends SmartGlassesCommunicator {
 
     @Override
     public void blankScreen() {
-        // TODO: Implement screen blanking command using firmware
+        this.connectionManager.sendCommand(this.evenOsApi.exitApp()).thenAccept(result -> {
+            System.out.println("response: " + result);
+        });
     }
 
     @Override
     public void destroy() {
-        // TODO: Implement cleanup and disconnection logic
-        if (leftConnection != null) {
-            leftConnection.disconnect();
-        }
-        if (rightConnection != null) {
-            rightConnection.disconnect();
-        }
+        this.connectionManager.destroy();
     }
 
     @Override
@@ -81,7 +47,9 @@ public class G1Adapter extends SmartGlassesCommunicator {
 
     @Override
     public void displayTextWall(String text) {
-        // TODO: Implement text wall display command using firmware
+        this.connectionManager.sendCommand(this.evenOsApi.sendText(text)).thenAccept(result -> {
+            System.out.println("response: " + result);
+        });
     }
 
     @Override

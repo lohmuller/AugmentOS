@@ -427,14 +427,14 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    new Handler(Looper.getMainLooper()).post(() -> initG1s(gatt, side));
+                    new Handler(Looper.getMainLooper()).post(() -> init(gatt));
                 }
             }
 
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.d(TAG, "PROC_QUEUE - " + side + " glass write successful");
+                //    Log.d(TAG, "PROC_QUEUE - " + side + " glass write successful");
                 } else {
                     Log.e(TAG, side + " glass write failed with status: " + status);
 
@@ -471,17 +471,11 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
                         byte[] data = characteristic.getValue();
                         String deviceName = gatt.getDevice().getName();
                         if (deviceName == null) return;
+                        logBluetoothCommand(deviceName, data);
 
-                        // Handle MIC audio data
                         if (data.length > 0 && (data[0] & 0xFF) == 0xF1) {
                             int seq = data[1] & 0xFF; // Sequence number
-                            // eg. LC3 to PCM
                             byte[] lc3 = Arrays.copyOfRange(data, 2, 202);
-//                            byte[] pcmData = L3cCpp.decodeLC3(lc3);
-//                            if (pcmData == null) {
-//                                throw new IllegalStateException("Failed to decode LC3 data");
-//                            }
-
                             if (deviceName.contains("R_")) {
                                 //decode the LC3 audio
                                 if (lc3DecoderPtr != 0) {
@@ -497,38 +491,24 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
                                             Log.e(TAG, "Audio processing callback is null - callback registration failed!");
                                         }
                                     }
-
-//                                    if (shouldUseGlassesMic) { TODO: add this back if needed
-//                                        EventBus.getDefault().post(new AudioChunkNewEvent(pcmData));
-//                                    } else {
-//                                        Log.e(TAG, "Failed to decode LC3 frame, got null or empty result");
-//                                    }
                                 }
-
-                            //send through the LC3
-                            audioProcessingCallback.onLC3AudioDataAvailable(lc3);
-
-                        } else {
-//                                Log.d(TAG, "Lc3 Audio data received. Seq: " + seq + ", Data: " + Arrays.toString(lc3) + ", from: " + deviceName);
+                                audioProcessingCallback.onLC3AudioDataAvailable(lc3);
+                            }
                         }
-                    }
-                        //HEAD UP MOVEMENTS
-                        else if (data.length > 1 && (data[0] & 0xFF) == 0xF5 && (data[1] & 0xFF) == 0x02) {
+                    } else if (data.length > 1 && (data[0] & 0xFF) == 0xF5 && (data[1] & 0xFF) == 0x02) {
                             // Only check head movements from the right sensor
                             if (deviceName.contains("R_")) {
                                 // Check for head down movement - initial F5 02 signal
                                 Log.d(TAG, "HEAD UP MOVEMENT DETECTED");
                                 EventBus.getDefault().post(new GlassesHeadUpEvent());
                             }
-                        }
-                        //HEAD DOWN MOVEMENTS
-                        else if (data.length > 1 && (data[0] & 0xFF) == 0xF5 && (data[1] & 0xFF) == 0x03) {
+                    } else if (data.length > 1 && (data[0] & 0xFF) == 0xF5 && (data[1] & 0xFF) == 0x03) {
                             if (deviceName.contains("R_")) {
                                  Log.d(TAG, "HEAD DOWN MOVEMENT DETECTED");
                                 //                                clearBmpDisplay();
                                 EventBus.getDefault().post(new GlassesHeadDownEvent());
                             }
-                        }
+                    }
                         //DOUBLE TAP
                         //appears to be completely broken - clears the screen - we should not tell people to use the touchpads yet til this is fixed
 //                        else if (data.length > 1 && (data[0] & 0xFF) == 0xF5 && ((data[1] & 0xFF) == 0x20) || ((data[1] & 0xFF) == 0x00)) {
@@ -537,7 +517,7 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
 //                            EventBus.getDefault().post(new GlassesTapOutputEvent(2, isRight, System.currentTimeMillis()));
 //                        }
                         //BATTERY RESPONSE
-                        else if (data.length > 2 && data[0] == 0x2C && data[1] == 0x66) {
+                    else if (data.length > 2 && data[0] == 0x2C && data[1] == 0x66) {
                             if (deviceName.contains("L_")) {
                                 //Log.d(TAG, "LEFT Battery response received");
                                 batteryLeft = data[2];
@@ -551,21 +531,20 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
                                 //Log.d(TAG, "Minimum Battery Level: " + minBatt);
                                 EventBus.getDefault().post(new BatteryLevelEvent(minBatt));
                             }
-                        }
-                        //HEARTBEAT RESPONSE
-                        else if (data.length > 0 && data[0] == 0x25) {
-                            Log.d(TAG, "Heartbeat response received");
-                        }
-                        //TEXT RESPONSE
-                        else if (data.length > 0 && data[0] == 0x4E) {
-                            Log.d(TAG, "Text response on side " + (deviceName.contains("L_") ? "Left" : "Right") + " was: " + ((data.length > 1 && (data[1] & 0xFF) == 0xC9) ? "SUCCEED" : "FAIL"));
-                        }
-
-
-                        // Handle other non-audio responses
-                        else {
-                            Log.d(TAG, "PROC - Received other Even Realities response: " + bytesToHex(data) + ", from: " + deviceName);
-                        }
+                    }
+                    //HEARTBEAT RESPONSE
+                    else if (data.length > 0 && data[0] == 0x25) {
+                        Log.d(TAG, "Heartbeat response received");
+                    }
+                    //TEXT RESPONSE
+                    else if (data.length > 0 && data[0] == 0x4E) {
+                    //    Log.d(TAG, "Text response on side " + (deviceName.contains("L_") ? "Left" : "Right") + " was: " + ((data.length > 1 && (data[1] & 0xFF) == 0xC9) ? "SUCCEED" : "FAIL"));
+                    }
+                    // Handle other non-audio responses
+                    else {
+                        logBluetoothCommand("UNKNOW", data);
+                        Log.d(TAG, "PROC - Received other Even Realities response: " + bytesToHex(data) + ", from: " + deviceName);
+                    }
 
                         //clear the waiter
 //                        if ((data.length > 1 && (data[1] & 0xFF) == 0xC9)){
@@ -2852,5 +2831,84 @@ public class EvenRealitiesG1SGC extends SmartGlassesCommunicator {
      */
     public boolean isMicrophoneEnabled() {
         return isMicrophoneEnabled;
+    }
+
+    private void logBluetoothCommand(String deviceName, byte[] data) {
+        if (data == null || data.length == 0) {
+            return;
+        }
+
+
+        Log.d(TAG, "IAN_DEBUG1 - Received command: " + bytesToHex(data));
+
+        StringBuilder logMessage = new StringBuilder();
+        logMessage.append("\nIAN_DEBUG2 -");
+        
+        int command = data[0] & 0xFF;
+
+        // Log known commands
+        switch (command) {
+            case 0x27:
+                logMessage.append("Wear Detection");
+                // Wear Detection
+                break;
+            case 0x03:
+                logMessage.append("Silent Mode");
+                // Silent Mode
+                break;
+            case 0x01:
+                logMessage.append("Brightness");
+                // Brightness
+                break;
+            case 0x0E:
+                logMessage.append("Mic Enable");
+                // Mic Enable
+                break;
+            case 0x04:
+                logMessage.append("Whitelist");
+                // Whitelist
+                break;
+            case 0xF1:
+                logMessage.append("Audio Stream");
+                // Audio Stream
+                if (data.length > 1) {
+                    logMessage.append(" | Seq: ").append(data[1] & 0xFF);
+                }
+                break;
+            case 0xF5:
+                if (data.length > 1) {
+                    int subCommand = data[1] & 0xFF;
+                    switch (subCommand) {
+                        case 0x02:
+                            logMessage.append("HEAD UP Movement");
+                            break;
+                        case 0x03:
+                            logMessage.append("HEAD DOWN Movement");
+                            break;
+                        default:
+                            logMessage.append("Unknown F5 subcommand: 0x").append(String.format("%02X", subCommand));
+                    }
+                }
+                break;
+            case 0x2C:
+                logMessage.append("Battery Response");
+                if (data.length > 2) {
+                    logMessage.append(" | Level: ").append(data[2] & 0xFF).append("%");
+                }
+                break;
+            case 0x25:
+                logMessage.append("Heartbeat Response");
+                break;
+            case 0x4E:
+                logMessage.append("Text Response");
+                if (data.length > 1) {
+                    logMessage.append(" | Status: ").append((data[1] & 0xFF) == 0xC9 ? "SUCCESS" : "FAIL");
+                }
+                break;
+            default:
+                Log.d(TAG, "IAN_DEBUG3 - UNKNOWN COMMAND: " + bytesToHex(data));
+        }
+        
+        Log.d(TAG, logMessage.toString());
     }
 }

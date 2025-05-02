@@ -40,7 +40,7 @@ class Logger {
 
     private formatMessage(level: LogLevel, message: string, context: string): string {
         const timestamp = new Date().toISOString();
-        return `${timestamp} [${level}] ${context}: ${message}`;
+        return `${context}: ${message}`;
     }
 
     private shouldLog(level: LogLevel): boolean {

@@ -8,28 +8,6 @@ import java.nio.ByteBuffer;
 
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 
-public class EvenOsCommand {
-
-    public final int opcodeId;    
-    public final byte[][] requestPackets;
-    public final byte[] responseHeader;
-    public final Sides sides;
-
-    public enum Sides {
-        LEFT, RIGHT, BOTH, ANY;
-    }
-
-    public EvenOsCommand(int opcodeId, byte[][] requestPackets, byte[] responseHeader, Sides sides) {
-        this.opcodeId = opcodeId;
-        this.requestPackets = requestPackets;
-        this.responseHeader = responseHeader;
-        this.sides = sides;
-    }
-
-    public EvenOsCommand(int opcodeId, byte[] singleRequest, byte[] responseHeader, Sides sides) {
-        this(opcodeId, new byte[][]{ singleRequest }, responseHeader, sides);
-    }
-}
 
 public class Even_Os_1_5_0 implements EvenOsBase {
 
@@ -54,7 +32,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.SET_BRIGHTNESS, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -69,7 +49,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.SET_SILENT_MODE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }   
 
     /** 
@@ -84,7 +66,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.SET_MICROPHONE_ENABLED, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
 
@@ -111,7 +95,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
         
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.HEARTBEAT, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -124,7 +110,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) 0x18
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(CommandId.EXIT_APP, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     public EvenOsCommand initialize() {
@@ -133,7 +121,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) 0xFB // Maybe there is more options to send?
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(CommandId.INITIALIZE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -155,7 +145,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) 0x6C,
             (byte) 0x64
         };
-        return new EvenOsCommand(CommandId.FIRMWARE_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -169,7 +161,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) (enabled ? 1 : 0)
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(CommandId.SET_WEAR_DETECTION, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
     
     /**
@@ -181,7 +175,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) 0x2C,
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(CommandId.GET_BATTERY_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -193,7 +189,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
             (byte) 0x37,
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(CommandId.GET_DEVICE_UPTIME, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -207,7 +205,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.GET_USAGE_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
     
 
@@ -246,7 +246,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.SET_HEAD_UP_ANGLE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
     
     
@@ -282,7 +284,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { 0x04 };
         
-        return new EvenOsCommand(CommandId.SET_NOTIFICATION_CONFIG, chunks, responseHeader, EvenOsCommand.Sides.LEFT);
+        return new EvenOsCommand(chunks, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -306,7 +310,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.SET_DASHBOARD_MODE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH,(byte[] data) -> {
+            return null;
+        });
     }
 
     public EvenOsCommand sendText(String text) {
@@ -339,7 +345,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { 0x04 };
 
-        return new EvenOsCommand(CommandId.SEND_TEXT, packets, responseHeader, EvenOsCommand.Sides.LEFT);
+        return new EvenOsCommand(packets, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+            return null;
+        });
     }
 
  
@@ -383,7 +391,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { 0x15 };
 
-        return new EvenOsCommand(CommandId.SEND_BMP, result, responseHeader, EvenOsCommand.Sides.LEFT);
+        return new EvenOsCommand(result, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -399,7 +409,9 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.END_TRANSFER_BMP, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
     /**
@@ -430,8 +442,57 @@ public class Even_Os_1_5_0 implements EvenOsBase {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(CommandId.CRC_CHECK, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+            return null;
+        });
     }
 
-    
+
+    /*
+    public  responseParser(byte[] data) {
+
+        CommandId commandId = null;
+
+        if (data[0] == 0x25) {
+            commandId = CommandId.HEARTBEAT;
+        }else if (data[0] == 0x01) {
+            commandId = CommandId.SET_BRIGHTNESS;
+        }else if (data[0] == 0x03) {
+            commandId = CommandId.SET_SILENT_MODE;
+        }else if (data[0] == 0x0E) {
+            commandId = CommandId.SET_MICROPHONE_ENABLED;
+        }else if (data[0] == 0x18) {
+            commandId = CommandId.EXIT_APP;
+        }else if (data[0] == 0x4D) {
+            commandId = CommandId.INITIALIZE;
+        }else if (data[0] == 0x23) {
+            commandId = CommandId.GET_FIRMWARE_INFO;
+        }else if (data[0] == 0x27) {
+            commandId = CommandId.SET_WEAR_DETECTION;
+        }else if (data[0] == 0x2C) {
+            commandId = CommandId.GET_BATTERY_INFO;
+        }else if (data[0] == 0x37) {
+            commandId = CommandId.GET_DEVICE_UPTIME;
+        }else if (data[0] == 0x3E) {
+            commandId = CommandId.GET_USAGE_INFO;
+        }else if (data[0] == 0x04) {
+            commandId = CommandId.SET_NOTIFICATION_CONFIG;
+        }else if (data[0] == 0x06) {
+            commandId = CommandId.SET_DASHBOARD_MODE;   
+        }else if (data[0] == 0x4E) {
+            commandId = CommandId.SEND_TEXT;
+        }else if (data[0] == 0x15) {
+            commandId = CommandId.SEND_BMP;
+        }else if (data[0] == 0x20) {
+            commandId = CommandId.END_TRANSFER_BMP; 
+        }else if (data[0] == 0x16) {
+            commandId = CommandId.CRC_CHECK;
+        }
+        
+        return {
+            commandId,
+            data
+        };
+    }
+    */
 }
