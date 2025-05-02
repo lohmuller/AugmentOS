@@ -113,7 +113,7 @@ public class Connection {
         }
 
         if (this.rxChar == null) {
-            throw new BleInitializationException("RX characteristic not found (UUID: " + uartTxCharUuid + ")");
+            throw new BleInitializationException("RX characteristic not found (UUID: " + uartRxCharUuid + ")");
         }
         
         enableRxNotification();
