@@ -8,11 +8,10 @@ public class CommandQueue {
     private final List<EvenOsCommand> rightQueue = new CopyOnWriteArrayList<>();
 
     public void add(EvenOsCommand command) {
-        EvenOsCommand cmd = command;
-        if (cmd.sides == EvenOsCommand.Sides.LEFT || cmd.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsCommand.Sides.LEFT || command.sides == EvenOsCommand.Sides.BOTH) {
             leftQueue.add(command);
         }
-        if (cmd.sides == EvenOsCommand.Sides.RIGHT || cmd.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsCommand.Sides.RIGHT || command.sides == EvenOsCommand.Sides.BOTH) {
             rightQueue.add(command);
         }
     }
