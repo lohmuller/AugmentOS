@@ -1,118 +1,44 @@
 import java.util.EnumMap;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.zip.CRC32;
+import java.nio.ByteBuffer;
 
-public class Even_Os_1_5_0 implements BaseFw {
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 
-    public enum DashboardMode {
-        FULL(0),
-        DUAL(1),
-        MINIMAL(2);
-        
-        private final int value;
-        DashboardMode(int value) {this.value = value;}
-        public int getValue() {return value;}
+public class EvenOsCommand {
+
+    public final int opcodeId;    
+    public final byte[][] requestPackets;
+    public final byte[] responseHeader;
+    public final Sides sides;
+
+    public enum Sides {
+        LEFT, RIGHT, BOTH, ANY;
     }
 
-    public enum DashboardSubMode {
-        NOTES(0),
-        STOCK(1),
-        NEWS(2),
-        CALENDAR(3),
-        NAVIGATION(4),
-        EMPTY1(5),
-        EMPTY2(6);
-
-        private final int value;
-        DashboardSubMode(int value) {this.value = value;}
-        public int getValue() {return value;}
+    public EvenOsCommand(int opcodeId, byte[][] requestPackets, byte[] responseHeader, Sides sides) {
+        this.opcodeId = opcodeId;
+        this.requestPackets = requestPackets;
+        this.responseHeader = responseHeader;
+        this.sides = sides;
     }
 
-    private int seq;
-
-    private int getAvailableSeq() {
-        if (seq >= 255) {
-            seq = 0;
-        }
-        return seq++;
+    public EvenOsCommand(int opcodeId, byte[] singleRequest, byte[] responseHeader, Sides sides) {
+        this(opcodeId, new byte[][]{ singleRequest }, responseHeader, sides);
     }
+}
 
-    public static final Map<CommandId, CommandMeta> COMMANDS;
-
-    static {
-        COMMANDS = CommandInterface.createEmptyCommandMap();
-
-        COMMANDS.put(CommandId.SET_BRIGHTNESS,
-            new CommandMeta(new byte[]{0x01}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.SET_SILENT_MODE,
-            new CommandMeta(new byte[]{0x03}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.SET_NOTIFICATION_CONFIG,
-            new CommandMeta(new byte[]{0x04}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.SET_DASHBOARD_MODE,
-            new CommandMeta(new byte[]{0x06}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.MIC_ENABLE,
-            new CommandMeta(new byte[]{0x0E}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.BMP_DISPLAY,
-            new CommandMeta(new byte[]{0x15}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.BMP_CRC,
-            new CommandMeta(new byte[]{0x16}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.CLEAR_SCREEN,
-            new CommandMeta(new byte[]{0x18}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.QUICK_NOTE,
-            new CommandMeta(new byte[]{0x1E}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.FIRMWARE_INFO,
-            new CommandMeta(
-                new byte[]{0x23}, // REQ
-                new byte[]{0x6E, 0x65, 0x74, 0x20, 0x62, 0x75, 0x69, 0x6C, 0x64}, // "net build"
-                PrefSide.DEVICE
-            ));
-
-        COMMANDS.put(CommandId.HEARTBEAT,
-            new CommandMeta(new byte[]{0x25}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.WEAR_DETECTION,
-            new CommandMeta(new byte[]{0x27}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.BATTERY_INFO,
-            new CommandMeta(new byte[]{0x2C}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.UPTIME,
-            new CommandMeta(new byte[]{0x37}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.USAGE_INFO,
-            new CommandMeta(new byte[]{0x3E}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.DISPLAY_NOTIFICATION,
-            new CommandMeta(new byte[]{0x4B}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.INIT,
-            new CommandMeta(new byte[]{0x4D}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.TEXT_COMMMAND,
-            new CommandMeta(new byte[]{0x4E}, PrefSide.BOTH));
-
-        COMMANDS.put(CommandId.AUDIO_STREAM,
-            new CommandMeta(new byte[]{(byte) 0xF1}, PrefSide.RIGHT));
-
-        COMMANDS.put(CommandId.STATES_CHANGE,
-            new CommandMeta(new byte[]{(byte) 0xF5}, PrefSide.BOTH));
-    }
+public class Even_Os_1_5_0 implements EvenOsBase {
 
     /**
      * Set brightness
      * @param level (0-100)
      * @param auto (true/false)
      */
-    public byte setBrightness(int level, boolean auto) {
-
+    public EvenOsCommand setBrightness(int level, boolean auto) {
         int fallbackLevel = 30;
         int safeLevel = (level >= 0 && level <= 100) ? level : fallbackLevel;
 
@@ -120,72 +46,207 @@ public class Even_Os_1_5_0 implements BaseFw {
         int scaledLevel = (safeLevel * 63) / 100;
 
         // Validate brightness rang
-        return new byte[] {
-            (byte) 0x23,
+        byte[] requestBytes = new byte[] {
+            (byte) 0x01,
             (byte) scaledLevel,
             (byte)(auto ? 1 : 0)
         };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.SET_BRIGHTNESS, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
     /**
      * Set silent mode
      * @param silent (true/false)
      */
-    public byte setSilentMode(boolean silent) {
-        return new byte[] {
+    public EvenOsCommand setSilentMode(boolean silent) {
+        byte[] requestBytes = new byte[] {
             (byte) 0x03,
             (byte)(silent ? 1 : 0)
         };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.SET_SILENT_MODE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }   
 
     /** 
      * Set microphone enabled
      * @param enabled (true/false)
      */
-    public byte setMicrophoneEnabled(boolean enabled) {
-        return new byte[] {
-            (byte) 0x0E,
+    public EvenOsCommand setMicrophoneEnabled(boolean enabled) {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x0E,            //opcode
             (byte)(enabled ? 1 : 0)
         };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.SET_MICROPHONE_ENABLED, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
-    public byte heartbeat(int seq, int nextSeq) {
-        return new byte[] {
-            (byte) 0x25,
-            (byte) this.getAvailableSeq(),
-            (byte) 0x04,
-            (byte) this.getAvailableSeq()
+
+    private int heartbeatSeq;
+    /**
+     * Heartbeat
+     * @param seq (sequence number)
+     * @param length (length of the heartbeat)
+     */
+    public EvenOsCommand heartbeat() {
+        int length = 6;
+        int seq = heartbeatSeq & 0xFF;
+
+        byte[] requestBytes = new byte[] {
+            (byte) 0x25,                        // Opcode for heartbeat
+            (byte) (length & 0xFF),             // Length LSB (little-endian)
+            (byte) ((length >> 8) & 0xFF),      // Length MSB (normally 0)
+            (byte) (seq & 0xFF),                // Sequence number (first instance)
+            (byte) 0x04,                        // Fixed value, what is it?
+            (byte) ((seq + 1) & 0xFF)           // Sequence number (second instance). Maybe can split in two packets?
         };
+        // Increment sequence, wrapping at 256
+        heartbeatSeq = (heartbeatSeq + 1) % 256;
+        
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.HEARTBEAT, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
-    public byte clearScreen() {
-        return new byte[] {
+    /**
+     * Exit app
+     * tell the glasses to exit function to dashboard
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand exitApp() {
+        byte[] requestBytes = new byte[] {
             (byte) 0x18
         };
+        byte[] responseHeader = { requestBytes[0] };
+        return new EvenOsCommand(CommandId.EXIT_APP, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
-    public byte initialize() {
-        return new byte[] {
+    public EvenOsCommand initialize() {
+        byte[] requestBytes = new byte[] {
             (byte) 0x4D,
-            (byte) 0xFB // TODO: check if can change to another value
+            (byte) 0xFB // Maybe there is more options to send?
         };
+        byte[] responseHeader = { requestBytes[0] };
+        return new EvenOsCommand(CommandId.INITIALIZE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
+    /**
+     * Get firmware info
+     * @return (EvenOsCommand)
+     */
+    public EvenOsCommand getFirmwareInfo() {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x23,
+        };
+        byte[] responseHeader = new byte[] {
+            (byte) 0x6E,
+            (byte) 0x65,
+            (byte) 0x74,
+            (byte) 0x20,
+            (byte) 0x62,
+            (byte) 0x75,
+            (byte) 0x69,
+            (byte) 0x6C,
+            (byte) 0x64
+        };
+        return new EvenOsCommand(CommandId.FIRMWARE_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+
+    /**
+     * Set wear detection
+     * @param enabled (true/false)
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand setWearDetection(boolean enabled) {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x27,
+            (byte) (enabled ? 1 : 0)
+        };
+        byte[] responseHeader = { requestBytes[0] };
+        return new EvenOsCommand(CommandId.SET_WEAR_DETECTION, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+    
+    /**
+     * Get battery info for both arms
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand getBatteryInfo() {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x2C,
+        };
+        byte[] responseHeader = { requestBytes[0] };
+        return new EvenOsCommand(CommandId.GET_BATTERY_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+
+    /**
+    * Get device (glasses) uptime
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand getDeviceUptime() {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x37,
+        };
+        byte[] responseHeader = { requestBytes[0] };
+        return new EvenOsCommand(CommandId.GET_DEVICE_UPTIME, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+
+    /**
+     * Fetch buried point data, which is essentially user usage tracking
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand getUsageInfo() {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x3E,
+        };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.GET_USAGE_INFO, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+    
+
+    /**
+     * Set quick note
+     * @TODO: Need more information about this command!
+     * @param note (String)
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand setQuickNote(String note) {
+        throw new UnsupportedOperationException("Not implemented yet");
+        /*
+        return new byte[] {
+            (byte) 0x1E,
+            (byte) note.getBytes().length,
+            note.getBytes(),
+        };
+        */
+    }
+    
 
     /**
      * Set head up angle
      * @param angle (0-60)
-     * @param unknown (1 or 0)
+     * @param unknownParameter (1 or 0) @TODO: Check if this parameter is used...
      */
-    public byte setHeadUpAngle(int angle, int unknown) {
+    public EvenOsCommand setHeadUpAngle(int angle, boolean unknownParameter) {
 
         // Validate angle range (0 ~ 60)
         int clamped = Math.max(0, Math.min(angle, 60));
-        return new byte[] {
+        byte[] requestBytes = new byte[] {
             (byte) 0x0B,
             (byte) clamped,
-            (byte) 0x01 //@TODO to use the  unknown?
+            (byte) (unknownParameter ? 1 : 0) 
         };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.SET_HEAD_UP_ANGLE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
     
     
@@ -194,7 +255,7 @@ public class Even_Os_1_5_0 implements BaseFw {
      * @param jsonData (json data)
      * @return chunks (byte[][] array of chunks) Multiple sends
      */
-    public byte[][] setNotificationConfig(String jsonData) {
+    public EvenOsCommand setNotificationConfig(String jsonData) {
         
         int maxSize = 180;
         byte[] jsonBytes = jsonData.getBytes();
@@ -218,8 +279,10 @@ public class Even_Os_1_5_0 implements BaseFw {
         
             chunks[i] = data;
         }
+
+        byte[] responseHeader = { 0x04 };
         
-        return chunks;
+        return new EvenOsCommand(CommandId.SET_NOTIFICATION_CONFIG, chunks, responseHeader, EvenOsCommand.Sides.LEFT);
     }
 
     /**
@@ -227,11 +290,11 @@ public class Even_Os_1_5_0 implements BaseFw {
      * @param mode DashboardMode enum value
      * @param subMode DashboardSubMode enum value
      */
-    public byte[] setDashboardMode(DashboardMode mode, DashboardSubMode subMode) {
+    public EvenOsCommand setDashboardMode(DashboardMode mode, DashboardSubMode subMode) {
         if (mode == DashboardMode.MINIMAL && subMode != DashboardSubMode.NOTES) {
             throw new IllegalArgumentException("SubMode not supported for MINIMAL mode");
         }
-        return new byte[] {
+        byte[] requestBytes = new byte[] {
             (byte) 0x06,
             (byte) 0x07,
             (byte) this.getAvailableSeq(), //seq ?
@@ -240,10 +303,13 @@ public class Even_Os_1_5_0 implements BaseFw {
             (byte) mode.getValue(),
             (byte) subMode.getValue()
         };
+
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.SET_DASHBOARD_MODE, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
-
-    public byte[][] textPackets(String text) {
+    public EvenOsCommand sendText(String text) {
         final int maxPayloadPerPacket = 180; // @TODO check the correct max value
 
         byte[] textBytes = text.getBytes(StandardCharsets.UTF_8);
@@ -258,7 +324,7 @@ public class Even_Os_1_5_0 implements BaseFw {
 
             ByteBuffer buffer = ByteBuffer.allocate(9 + chunk.length);
             buffer.put((byte) 0x4E);                          // Command ID
-            buffer.put((byte) this.getAvailableSeq());         // Sequence Number
+            buffer.put((byte) i);                             // Sequence Number
             buffer.put((byte) totalPackets);                  // Total packages
             buffer.put((byte) i);                             // Current package number
             buffer.put((byte) 0x71);                          // newscreen: 0x70 (Text) + 0x01 (New content)
@@ -271,15 +337,25 @@ public class Even_Os_1_5_0 implements BaseFw {
             packets[i] = buffer.array();
         }
 
-        return packets;
+        byte[] responseHeader = { 0x04 };
+
+        return new EvenOsCommand(CommandId.SEND_TEXT, packets, responseHeader, EvenOsCommand.Sides.LEFT);
     }
 
  
-    public static byte[][] transferBmp(byte[] bmpData) {
-        
+    /**
+     * Transfer bmp
+     * @param bmpData (byte[] array of bytes)
+     * @return (byte[][] array of chunks)
+     */
+    public EvenOsCommand sendBmp(byte[] bmpData) {
         int PACKET_SIZE = 194;
         byte[] ADDRESS_HEADER = new byte[]{0x00, 0x1C, 0x00, 0x00}; 
         int totalChunks = (int) Math.ceil((double) bmpData.length / PACKET_SIZE);
+
+        if (totalChunks > 255) {
+            throw new IllegalArgumentException("bmp data is too large to send");
+        }
 
         byte[][] result = new byte[totalChunks][];
 
@@ -291,48 +367,70 @@ public class Even_Os_1_5_0 implements BaseFw {
             ByteBuffer buffer;
             if (i == 0) {
                 buffer = ByteBuffer.allocate(2 + ADDRESS_HEADER.length + chunk.length); //create buffer
-                buffer.put((byte) 0x15);    //commandID
-                buffer.put((byte) this.getAvailableSeq());       //seq
+                buffer.put((byte) 0x15);    //opcode
+                buffer.put((byte) i);       //seq
                 buffer.put(ADDRESS_HEADER); //address header
 
             } else {
                 buffer = ByteBuffer.allocate(2 + chunk.length); //create buffer
-                buffer.put((byte) 0x15); //commandID
-                buffer.put((byte) this.getAvailableSeq());   //seq
+                buffer.put((byte) 0x15); //opcode
+                buffer.put((byte) i);   //seq
             }
 
             buffer.put(chunk);
             result[i] = buffer.array();
         }
 
-        return result;
+        byte[] responseHeader = { 0x15 };
+
+        return new EvenOsCommand(CommandId.SEND_BMP, result, responseHeader, EvenOsCommand.Sides.LEFT);
     }
 
-    public static byte[][] endTransferBmp(byte[] bmpData) {
-        byte[][] result = new byte[2][];
+    /**
+     * End transfer bmp, and show the image
+     * @return (byte[][] array of chunks)
+     */
+    public EvenOsCommand endTransferBmp() {
+        byte[] requestBytes = new byte[] {
+            (byte) 0x20, 
+            (byte) 0x0D, 
+            (byte) 0x0E, 
+        };
 
-        // Comando de fim
-        result[0] = new byte[]{0x20, 0x0D, 0x0E};
+        byte[] responseHeader = { requestBytes[0] };
 
+        return new EvenOsCommand(CommandId.END_TRANSFER_BMP, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
+    }
+
+    /**
+     * CRC check
+     * @param bmpData (byte[] array of bytes)
+     * @return (byte[] array of bytes)
+     */
+    public EvenOsCommand crcCheck(byte[] bmpData) {
+        byte[] ADDRESS_HEADER = new byte[]{0x00, 0x1C, 0x00, 0x00}; 
         // CRC
         byte[] withAddress = new byte[ADDRESS_HEADER.length + bmpData.length];
         System.arraycopy(ADDRESS_HEADER, 0, withAddress, 0, ADDRESS_HEADER.length);
         System.arraycopy(bmpData, 0, withAddress, ADDRESS_HEADER.length, bmpData.length);
 
         // Calculate CRC
-        CRC32 crc32 = new CRC32(); // Substitua por CRC32-XZ se necessário
+        CRC32 crc32 = new CRC32(); //Maybe we can use CRC32-XZ instead
         crc32.update(withAddress);
         int crc = (int) crc32.getValue();
 
-        result[1] = new byte[]{
-            0x16,
-            (byte) ((crc >> 24) & 0xFF),
-            (byte) ((crc >> 16) & 0xFF),
-            (byte) ((crc >> 8) & 0xFF),
-            (byte) (crc & 0xFF)
+        // Calculate CRC
+        byte[] requestBytes = new byte[] {
+            (byte) 0x16,                   
+            (byte) ((crc >> 24) & 0xFF),   //crc part 1
+            (byte) ((crc >> 16) & 0xFF),   //crc part 2
+            (byte) ((crc >> 8) & 0xFF),    //crc part 3
+            (byte) (crc & 0xFF)            //crc part 4
         };
 
-        return result;
+        byte[] responseHeader = { requestBytes[0] };
+
+        return new EvenOsCommand(CommandId.CRC_CHECK, requestBytes, responseHeader, EvenOsCommand.Sides.BOTH);
     }
 
     
