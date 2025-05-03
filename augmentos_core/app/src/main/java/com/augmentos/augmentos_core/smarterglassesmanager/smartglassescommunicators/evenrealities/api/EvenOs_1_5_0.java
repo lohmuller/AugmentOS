@@ -464,25 +464,63 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
     public Function<byte[], T> onDoubleTap(Sides side) {
         return (byte[] data) -> {
-            return null;
+            if (data[0] == 0xF5 && data[1] == 0x00) {
+                //@TODO: check the value of payload!
+                return true;
+            }
         };
     }
     
     public Function<byte[], T> onSingleTap(Sides side) {
         return (byte[] data) -> {
-            return null;
+            if (data[0] == 0xF5 && data[1] == 0x01) {
+                //@TODO: check the value of payload!
+                return true;
+            }
         };
     }
 
     public Function<byte[], T> onTripleTap(Sides side) {
         return (byte[] data) -> {
-            return null;
+            if (data[0] == 0xF5 && (data[1] == 0x04 || data[1] == 0x05)) {
+                //@TODO: check the value of payload!
+                return true;
+            }
         };
     }
 
-    public Function<byte[], T> onLongPress(Sides side) {
+    public Function<byte[], T> onLongPressHeld(Sides side) {
         return (byte[] data) -> {
-            return null;
+            if (data[0] == 0xF5 && data[1] == 0x17 ) {
+                //@TODO: check the value of payload!
+                return true;
+            }
+        };
+    }
+
+    public Function<byte[], T> onLongPressRelease(Sides side) {
+        return (byte[] data) -> {
+            if (data[0] == 0xF5 && data[1] == 0x18) {
+                //@TODO: check the value of payload!
+                return true;
+            }
+        };
+    }
+
+    public Function<byte[], T> onBlePairedSuccess(Sides side) {
+        return (byte[] data) -> {
+            if (data[0] == 0xF5 && data[1] == 0x11) {
+                //@TODO: check the value of payload!
+                return true;
+            }
+        };
+    }
+
+    public Function<byte[], T> onCaseBattery(Sides side) {
+        return (byte[] data) -> {
+            if (data[0] == 0xF5 && data[1] == 0x0F) {
+                return data[2]; //0~64
+            }
         };
     }
     
