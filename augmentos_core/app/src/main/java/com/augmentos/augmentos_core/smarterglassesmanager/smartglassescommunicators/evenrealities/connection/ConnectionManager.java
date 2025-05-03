@@ -35,6 +35,7 @@ public class ConnectionManager {
     private final int maxRetries = 3;
 
     private final CommandQueue commandQueue = new CommandQueue();
+    private final Map<String, EvenOsEventListener> responseListeners = new HashMap<>(); 
 
 
     public ConnectionManager(Context context, SmartGlassesDevice smartGlassesDevice) {
@@ -60,8 +61,8 @@ public class ConnectionManager {
     public void init() {
         this.leftConnection.connect();
         this.rightConnection.connect();
-        this.leftConnection.setRxDataListener((data) -> responseParser(data, "LEFT"));
-        this.rightConnection.setRxDataListener((data) -> responseParser(data, "RIGHT"));
+        this.leftConnection.setRxDataListener((data) -> onDataReceived(data, "LEFT"));
+        this.rightConnection.setRxDataListener((data) -> onDataReceived(data, "RIGHT"));
     }
 
 
@@ -106,19 +107,61 @@ public class ConnectionManager {
         CompletableFuture<T> future = sendCommand(command);
         return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
     }
-    
 
-    private void responseParser(byte[] data, String side) {
+    public <T> void setOnResponse(Sides side, EvenOsEventListener<T> listener, BiConsumer<T, Sides> handler) {
+        // Remove old entry if it exists
+        responseHandlers.removeIf(entry ->
+            entry.listener.equals(listener) && entry.side == side
+        );
+
+        // Add the new handler
+        responseHandlers.add(new ResponseHandler<>(side, listener, handler));
+    }
+        
+
+    private void onDataReceived(byte[] data, String side) {
         EvenOsCommand<?> matching = commandQueue.findMatching(data, side);
         if (matching != null) {
             try {
-                Object result = matching.responseParser.apply(data);
+                Object result = matching.onDataReceived.apply(data);
                 matching.future.complete(result);
             } catch (Exception e) {
                 matching.future.completeExceptionally(e);
             }
             commandQueue.remove(matching, side);
         }
+
+        for (Map.Entry<EvenOsEventListener<?>, BiConsumer<?, Sides>> entry : responseListeners.entrySet()) {
+            EvenOsEventListener<?> listener = entry.getKey();
+            if (listener.side == Sides.BOTH || listener.side == side) {
+                if (listener.matches(data, side)) {
+                    Object parsed = listener.parse(data, side);
+                    @SuppressWarnings("unchecked")
+                    BiConsumer<Object, Sides> handler = (BiConsumer<Object, Sides>) entry.getValue();
+                    handler.accept(parsed, side);
+                    break;
+                }
+            }
+        }
+
     }
     
+}
+
+public abstract class EvenOsEventListener<T> {
+    public Sides side = Sides.BOTH; // default
+    public abstract boolean matches(byte[] data, Sides side);
+    public abstract T parse(byte[] data, Sides side);
+}
+
+public class ResponseHandler<T> {
+    public final Sides side;
+    public final EvenOsEventListener<T> listener;
+    public final BiConsumer<T, Sides> handler;
+
+    public ResponseHandler(Sides side, EvenOsEventListener<T> listener, BiConsumer<T, Sides> handler) {
+        this.side = side;
+        this.listener = listener;
+        this.handler = handler;
+    }
 }

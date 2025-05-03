@@ -22,23 +22,28 @@ public class EvenRealitiesG1SGCNew extends SmartGlassesCommunicator {
 
     private void startBatteryMonitoring() {
         batteryMonitoringFuture = scheduler.scheduleAtFixedRate(() -> {
-            connectionManager
-                .sendCommand(evenOsApi.getBatteryInfo())
-                .thenAccept(result -> {
-                    int minBatteryLevel = Math.min(result.leftBatteryLevel, result.rightBatteryLevel);
-                    //@TODO: Glasses charging state True/False 
-                    //@TODO: Case charging state is true/false
-                    //@TODO: Case Battery level 
-                    EventBus.getDefault().post(new BatteryLevelEvent(minBatteryLevel));
-                    if (minBatteryLevel < 10 && batteryMonitoringFuture != null) {
-                        batteryMonitoringFuture.cancel(false);
-                    }
-                })
-                .exceptionally(ex -> {
-                    ex.printStackTrace();
-                    return null;
-                });
+            leftResponse = connectionManager.sendAndWait(evenOsApi.getBatteryInfo(Sides.LEFT), 1000);
+            rightResponse = connectionManager.sendAndWait(evenOsApi.getBatteryInfo(Sides.RIGHT), 1000);
+            
+            int minBatteryLevel = Math.min(leftResponse.leftBatteryLevel, rightResponse.rightBatteryLevel);
+
+            EventBus.getDefault().post(new BatteryLevelEvent(minBatteryLevel));
+            if (minBatteryLevel < 10 && batteryMonitoringFuture != null) {
+                batteryMonitoringFuture.cancel(false);
+            }
+             
         }, 0, 1, TimeUnit.MINUTES); // 1 minute
+    }
+
+    private void initListening() {
+        connectionManager.setOnResponse(Sides.LEFT, evenOsApi.onDoubleTap, (isTapped, side) -> {
+            if (isTapped) {
+                System.out.println("Double tap detected on " + side);
+            }
+        });
+        connectionManager.setOnResponse(Sides.BOTH, evenOsApi.onCaseBattery, (batteryLevel, side) -> {
+                System.out.println("Double tap detected on " + side);
+        });
     }
 
     @Override

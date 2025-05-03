@@ -182,12 +182,12 @@ public class Even_Os_1_5_0 implements EvenOsApi {
      * Get battery info for both arms
      * @return (byte[] array of bytes)
      */
-    public EvenOsCommand getBatteryInfo() {
+    public EvenOsCommand getBatteryInfo(Sides side) {
         byte[] requestBytes = new byte[] {
             (byte) 0x2C,
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, side, (byte[] data) -> {
             int batteryLevel = data[2];
             return {
                 batteryLevel: batteryLevel,
@@ -462,67 +462,87 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         });
     }
 
-    public Function<byte[], T> onDoubleTap(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x00) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
+
+    public final EvenOsEventListener<Boolean> onDoubleTap = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x00;
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x00;
+        }
+    };
+
+    public final EvenOsEventListener<Boolean> onSingleTap = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x01;
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x00;
+        }
+    };
+
     
-    public Function<byte[], T> onSingleTap(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x01) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
+    public final EvenOsEventListener<Boolean> onTripleTap = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x05;
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x00;
+        }
+    };
 
-    public Function<byte[], T> onTripleTap(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && (data[1] == 0x04 || data[1] == 0x05)) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
+    public final EvenOsEventListener<Boolean> onLongPressHeld = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && (data[1] == 0x17 || data[1] == 0x18);
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x17 || data[1] == 0x18;
+        }
+    };
 
-    public Function<byte[], T> onLongPressHeld(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x17 ) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
 
-    public Function<byte[], T> onLongPressRelease(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x18) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
+    public final EvenOsEventListener<Boolean> onLongPressRelease = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x18;
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x18;
+        }   
+    };
 
-    public Function<byte[], T> onBlePairedSuccess(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x11) {
-                //@TODO: check the value of payload!
-                return true;
-            }
-        };
-    }
+    public final EvenOsEventListener<Boolean> onBlePairedSuccess = new EvenOsEventListener<Boolean>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x11;
+        }
+        @Override
+        public Boolean parse(byte[] data, Sides side) {
+            return data[1] == 0x11;
+        }
+    };
 
-    public Function<byte[], T> onCaseBattery(Sides side) {
-        return (byte[] data) -> {
-            if (data[0] == 0xF5 && data[1] == 0x0F) {
-                return data[2]; //0~64
-            }
-        };
-    }
+    public final EvenOsEventListener<Integer> onCaseBattery = new EvenOsEventListener<Integer>() {
+        @Override
+        public boolean matches(byte[] data, Sides side) {
+            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x0F;
+        }
+        @Override
+        public Integer parse(byte[] data, Sides side) {
+            int rawValue = data[2] & 0xFF; //mask the value to 0-255
+            int percentage = Math.min(rawValue, 64); //No more than 100%  
+            return (percentage * 100) / 64; //scale to 0-100
+        }
+    };
     
 
 
