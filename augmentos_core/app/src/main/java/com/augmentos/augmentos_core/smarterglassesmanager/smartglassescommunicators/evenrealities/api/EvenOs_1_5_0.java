@@ -45,7 +45,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         byte[] responseHeader = { requestBytes[0] };
 
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); //Success or failure response
         });
     }
 
@@ -62,7 +62,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         byte[] responseHeader = { requestBytes[0] };
 
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); //Success or failure response
         });
     }   
 
@@ -79,7 +79,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         byte[] responseHeader = { requestBytes[0] };
 
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); //Success or failure response
         });
     }
 
@@ -108,7 +108,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         byte[] responseHeader = { requestBytes[0] };
 
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); //Success or failure response
         });
     }
 
@@ -123,7 +123,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         };
         byte[] responseHeader = { requestBytes[0] };
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); 
         });
     }
 
@@ -134,7 +134,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         };
         byte[] responseHeader = { requestBytes[0] };
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            return (data[0] == 0xC9); 
         });
     }
 
@@ -188,7 +188,10 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         };
         byte[] responseHeader = { requestBytes[0] };
         return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
-            return null;
+            int batteryLevel = data[2];
+            return {
+                batteryLevel: batteryLevel,
+            };
         });
     }
 
