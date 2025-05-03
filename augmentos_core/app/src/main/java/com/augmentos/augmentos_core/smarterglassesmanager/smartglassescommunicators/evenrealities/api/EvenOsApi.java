@@ -6,16 +6,16 @@
 
 package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api;
 
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsCommand;
 import java.util.function.Function;
 import java.util.concurrent.CompletableFuture;
+import android.graphics.Bitmap;
 
-public abstract class EvenOsApi<T> {
-
+public interface EvenOsApi {
     public enum Sides {
         LEFT, RIGHT, BOTH, EITHER;
     }
 
-    //Convert enum to class?
     public enum DashboardMode {
         FULL(0),
         DUAL(1),
@@ -25,7 +25,6 @@ public abstract class EvenOsApi<T> {
         public int getValue() {return value;}
     }
 
-    //Convert enum to class? 
     public enum DashboardSubMode {
         NOTES(0),
         STOCK(1),
@@ -39,25 +38,30 @@ public abstract class EvenOsApi<T> {
         public int getValue() {return value;}
     }
 
-    public abstract EvenOsCommand<T> setBrightness(int level, boolean auto);
-    public abstract EvenOsCommand<T> setSilentMode(boolean silent);
-    public abstract EvenOsCommand<T> setNotificationConfig(String json);
-    public abstract EvenOsCommand<T> setDashboardMode(DashboardMode mode, DashboardSubMode subMode);
-    public abstract EvenOsCommand<T> setMicrophoneEnabled(boolean enabled);
-    public abstract EvenOsCommand<T> sendBmp(byte[] bmpData);
-    public abstract EvenOsCommand<T> sendText(String text);
-    public abstract EvenOsCommand<T> endTransferBmp();
-    public abstract EvenOsCommand<T> crcCheck(byte[] bmpData);
-    public abstract EvenOsCommand<T> heartbeat();
-    public abstract EvenOsCommand<T> exitApp();
-    public abstract EvenOsCommand<T> initialize();
-    public abstract EvenOsCommand<T> getFirmwareInfo();
-    public abstract EvenOsCommand<T> setWearDetection(boolean enabled);
-    public abstract EvenOsCommand<T> getBatteryInfo();
-    public abstract EvenOsCommand<T> getDeviceUptime();
-    public abstract EvenOsCommand<T> getUsageInfo();
-    public abstract Function<byte[], T> onDoubleTap(Sides side);
-    public abstract Function<byte[], T> onSingleTap(Sides side);
-    public abstract Function<byte[], T> onTripleTap(Sides side);
-    public abstract Function<byte[], T> onLongPress(Sides side);
+    EvenOsCommand<Boolean> setBrightness(int level, boolean auto);
+    EvenOsCommand<Boolean> setSilentMode(boolean silent);
+    EvenOsCommand<Boolean> setMicrophoneEnabled(boolean enabled);
+    EvenOsCommand<Boolean> heartbeat();
+    EvenOsCommand<Boolean> exitApp();
+    EvenOsCommand<Boolean> initialize();
+    EvenOsCommand<Void> getFirmwareInfo();
+    EvenOsCommand<Boolean> setWearDetection(boolean enabled);
+    EvenOsCommand<?> getBatteryInfo(Sides side);
+    EvenOsCommand<Void> getDeviceUptime();
+    EvenOsCommand<Void> getUsageInfo();
+    EvenOsCommand<Boolean> setQuickNote(String note);
+    EvenOsCommand<Boolean> setHeadUpAngle(int angle);
+    EvenOsCommand<Boolean> setNotificationConfig(String jsonData);
+    EvenOsCommand<Boolean> setDashboardMode(DashboardMode mode, DashboardSubMode subMode);
+    EvenOsCommand<Boolean> sendText(String text);
+    EvenOsCommand<Boolean> sendBmp(byte[] bmpData);
+    EvenOsCommand<Boolean> endTransferBmp();
+    EvenOsCommand<Boolean> crcCheck(byte[] bmpData);
+    EvenOsEventListener<Boolean> onDoubleTap();
+    EvenOsEventListener<Boolean> onSingleTap();
+    EvenOsEventListener<Boolean> onTripleTap();
+    EvenOsEventListener<Boolean> onLongPressHeld();
+    EvenOsEventListener<Boolean> onLongPressRelease();
+    EvenOsEventListener<Boolean> onBlePairedSuccess();
+    EvenOsEventListener<Integer> onCaseBattery();
 }

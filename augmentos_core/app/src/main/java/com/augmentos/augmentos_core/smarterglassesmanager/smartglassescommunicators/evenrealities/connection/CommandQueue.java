@@ -14,6 +14,7 @@ package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunica
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsApi;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsCommand;
 
 public class CommandQueue {
@@ -22,10 +23,10 @@ public class CommandQueue {
     private final List<EvenOsCommand> rightQueue = new CopyOnWriteArrayList<>();
 
     public void add(EvenOsCommand command) {
-        if (command.sides == EvenOsCommand.Sides.LEFT || command.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsApi.Sides.LEFT || command.sides == EvenOsApi.Sides.BOTH) {
             leftQueue.add(command);
         }
-        if (command.sides == EvenOsCommand.Sides.RIGHT || command.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsApi.Sides.RIGHT || command.sides == EvenOsApi.Sides.BOTH) {
             rightQueue.add(command);
         }
     }
@@ -40,14 +41,14 @@ public class CommandQueue {
     }
 
     public boolean isAvailable(EvenOsCommand command) {
-        if (command.sides == EvenOsCommand.Sides.LEFT || command.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsApi.Sides.LEFT || command.sides == EvenOsApi.Sides.BOTH) {
             for (EvenOsCommand leftQueueCommand : leftQueue) {
                 if (hasByteConflict(command.responseHeader, leftQueueCommand.responseHeader)) {
                     return false;
                 }
             }
         }
-        if (command.sides == EvenOsCommand.Sides.RIGHT || command.sides == EvenOsCommand.Sides.BOTH) {
+        if (command.sides == EvenOsApi.Sides.RIGHT || command.sides == EvenOsApi.Sides.BOTH) {
             for (EvenOsCommand rightQueueCommand : rightQueue) {
                 if (hasByteConflict(command.responseHeader, rightQueueCommand.responseHeader)) {
                     return false;

@@ -43,7 +43,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); //Success or failure response
         });
     }
@@ -60,7 +60,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); //Success or failure response
         });
     }   
@@ -77,13 +77,12 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); //Success or failure response
         });
     }
 
 
-    private int heartbeatSeq;
     /**
      * Heartbeat
      * @param seq (sequence number)
@@ -106,7 +105,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
         
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); //Success or failure response
         });
     }
@@ -121,7 +120,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
             (byte) 0x18
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); 
         });
     }
@@ -132,7 +131,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
             (byte) 0xFB // Maybe there is more options to send?
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return (data[0] == 0xC9); 
         });
     }
@@ -156,7 +155,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
             (byte) 0x6C,
             (byte) 0x64
         };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
@@ -172,25 +171,31 @@ public class Even_Os_1_5_0 implements EvenOsApi {
             (byte) (enabled ? 1 : 0)
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
     
+    public static class BatteryInfo {
+        public final int batteryLevel;
+        
+        public BatteryInfo(int batteryLevel) {
+            this.batteryLevel = batteryLevel;
+        }
+    }
+
     /**
      * Get battery info for both arms
      * @return (byte[] array of bytes)
      */
-    public EvenOsCommand getBatteryInfo(Sides side) {
+    public EvenOsCommand<BatteryInfo> getBatteryInfo(EvenOsApi.Sides side) {
         byte[] requestBytes = new byte[] {
             (byte) 0x2C,
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, side, (byte[] data) -> {
+        return new EvenOsCommand<>(requestBytes, responseHeader, side, (byte[] data) -> {
             int batteryLevel = data[2];
-            return {
-                batteryLevel: batteryLevel,
-            };
+            return new BatteryInfo(batteryLevel);
         });
     }
 
@@ -203,7 +208,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
             (byte) 0x37,
         };
         byte[] responseHeader = { requestBytes[0] };
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
@@ -219,7 +224,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
@@ -246,21 +251,20 @@ public class Even_Os_1_5_0 implements EvenOsApi {
     /**
      * Set head up angle
      * @param angle (0-60)
-     * @param unknownParameter (1 or 0) @TODO: Check if this parameter is used...
      */
-    public EvenOsCommand setHeadUpAngle(int angle, boolean unknownParameter) {
+    public EvenOsCommand setHeadUpAngle(int angle) {
 
         // Validate angle range (0 ~ 60)
         int clamped = Math.max(0, Math.min(angle, 60));
         byte[] requestBytes = new byte[] {
             (byte) 0x0B,
             (byte) clamped,
-            (byte) (unknownParameter ? 1 : 0) 
+            (byte) 0x01 
         };
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
@@ -298,7 +302,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { 0x04 };
         
-        return new EvenOsCommand(chunks, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+        return new EvenOsCommand(chunks, responseHeader, EvenOsApi.Sides.LEFT, (byte[] data) -> {
             return null;
         });
     }
@@ -324,7 +328,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH,(byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH,(byte[] data) -> {
             return null;
         });
     }
@@ -359,7 +363,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { 0x04 };
 
-        return new EvenOsCommand(packets, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+        return new EvenOsCommand(packets, responseHeader, EvenOsApi.Sides.LEFT, (byte[] data) -> {
             return null;
         });
     }
@@ -405,7 +409,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { 0x15 };
 
-        return new EvenOsCommand(result, responseHeader, EvenOsCommand.Sides.LEFT, (byte[] data) -> {
+        return new EvenOsCommand(result, responseHeader, EvenOsApi.Sides.LEFT, (byte[] data) -> {
             return null;
         });
     }
@@ -423,7 +427,7 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
@@ -456,92 +460,103 @@ public class Even_Os_1_5_0 implements EvenOsApi {
 
         byte[] responseHeader = { requestBytes[0] };
 
-        return new EvenOsCommand(requestBytes, responseHeader, EvenOsCommand.Sides.BOTH, (byte[] data) -> {
+        return new EvenOsCommand(requestBytes, responseHeader, EvenOsApi.Sides.BOTH, (byte[] data) -> {
             return null;
         });
     }
 
+    public EvenOsEventListener<Boolean> onDoubleTap() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x00;
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x00;
+            }
+        };
+    }
 
-    public final EvenOsEventListener<Boolean> onDoubleTap = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x00;
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x00;
-        }
-    };
+    public EvenOsEventListener<Boolean> onSingleTap() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x01;
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x00;
+            }
+        };
+    }
 
-    public final EvenOsEventListener<Boolean> onSingleTap = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x01;
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x00;
-        }
-    };
+    public EvenOsEventListener<Boolean> onTripleTap() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x05;
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x00;
+            }
+        };
+    }
 
-    
-    public final EvenOsEventListener<Boolean> onTripleTap = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x05;
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x00;
-        }
-    };
+    public EvenOsEventListener<Boolean> onLongPressHeld() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && (data[1] == 0x17 || data[1] == 0x18);
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x17 || data[1] == 0x18;
+            }
+        };
+    }
 
-    public final EvenOsEventListener<Boolean> onLongPressHeld = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && (data[1] == 0x17 || data[1] == 0x18);
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x17 || data[1] == 0x18;
-        }
-    };
+    public EvenOsEventListener<Boolean> onLongPressRelease() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x18;
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x18;
+            }
+        };
+    }
 
+    public EvenOsEventListener<Boolean> onBlePairedSuccess() {
+        return new EvenOsEventListener<Boolean>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x11;
+            }
+            @Override
+            public Boolean parse(byte[] data, EvenOsApi.Sides side) {
+                return data[1] == 0x11;
+            }
+        };
+    }
 
-    public final EvenOsEventListener<Boolean> onLongPressRelease = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x18;
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x18;
-        }   
-    };
-
-    public final EvenOsEventListener<Boolean> onBlePairedSuccess = new EvenOsEventListener<Boolean>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x11;
-        }
-        @Override
-        public Boolean parse(byte[] data, Sides side) {
-            return data[1] == 0x11;
-        }
-    };
-
-    public final EvenOsEventListener<Integer> onCaseBattery = new EvenOsEventListener<Integer>() {
-        @Override
-        public boolean matches(byte[] data, Sides side) {
-            return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x0F;
-        }
-        @Override
-        public Integer parse(byte[] data, Sides side) {
-            int rawValue = data[2] & 0xFF; //mask the value to 0-255
-            int percentage = Math.min(rawValue, 64); //No more than 100%  
-            return (percentage * 100) / 64; //scale to 0-100
-        }
-    };
+    public EvenOsEventListener<Integer> onCaseBattery() {
+        return new EvenOsEventListener<Integer>() {
+            @Override
+            public boolean matches(byte[] data, EvenOsApi.Sides side) {
+                return data.length > 1 && data[0] == (byte) 0xF5 && data[1] == 0x0F;
+            }
+            @Override
+            public Integer parse(byte[] data, EvenOsApi.Sides side) {
+                int rawValue = data[2] & 0xFF; //mask the value to 0-255
+                int percentage = Math.min(rawValue, 64); //No more than 100%  
+                return (percentage * 100) / 64; //scale to 0-100
+            }
+        };
+    }
     
 
 

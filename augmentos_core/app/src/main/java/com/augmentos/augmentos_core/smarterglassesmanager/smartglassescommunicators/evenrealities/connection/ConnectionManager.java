@@ -22,14 +22,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import android.content.Context;
+import android.bluetooth.BluetoothDevice;
 
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsApi;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsCommand;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsEventListener;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.Sides;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.ConnectionConfig;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.Connection;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.connection.CommandQueue;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.SmartGlassesDevice;
 
 
 public class ConnectionManager {
@@ -39,23 +40,27 @@ public class ConnectionManager {
     private EvenOsBase evenOsApi;
     private final int maxRetries = 3;
 
-    private final CommandQueue commandQueue = new CommandQueue();
-    private final Map<String, EvenOsEventListener> responseListeners = new HashMap<>(); 
+    private final CommandQueue commandQueue;
+    private final List<ResponseHandler<?>> responseHandlers = new ArrayList<>();
+    private final Map<EvenOsEventListener<?>, BiConsumer<?, EvenOsApi.Sides>> responseListeners = new HashMap<>();
 
+    // UUIDs for UART service and characteristics
+    private static final UUID UartServiceUuid = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+    private static final UUID uartTxCharUuid = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+    private static final UUID uartRxCharUuid = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+    private static final UUID clientCharacteristicConfigUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     public ConnectionManager(Context context, SmartGlassesDevice smartGlassesDevice) {
         this.context = context;
         this.smartGlassesDevice = smartGlassesDevice;
 
-        UartServiceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
-        uartTxCharUuid = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
-        uartRxCharUuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
-        clientCharacteristicConfigUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
         int mtu = 512;
         ConnectionConfig config = new ConnectionConfig(UartServiceUuid, uartTxCharUuid, uartRxCharUuid, clientCharacteristicConfigUuid, mtu);
 
         this.leftConnection = new Connection(context, smartGlassesDevice.getLeftDevice(), config);
         this.rightConnection = new Connection(context, smartGlassesDevice.getRightDevice(), config);
+
+        this.commandQueue = new CommandQueue();
 
         this.init();
     }
@@ -96,12 +101,12 @@ public class ConnectionManager {
             this.commandQueue.add(sendCommand);
         }
         
-        if (sendCommand.sides == EvenOsCommand.Sides.LEFT || sendCommand.sides == EvenOsCommand.Sides.BOTH) {
+        if (sendCommand.sides == EvenOsApi.Sides.LEFT || sendCommand.sides == EvenOsApi.Sides.BOTH) {
             for (byte[] packet : sendCommand.requestPackets) {  
                 this.leftConnection.send(packet);
             }
         }
-        if (sendCommand.sides == EvenOsCommand.Sides.RIGHT || sendCommand.sides == EvenOsCommand.Sides.BOTH) {
+        if (sendCommand.sides == EvenOsApi.Sides.RIGHT || sendCommand.sides == EvenOsApi.Sides.BOTH) {
             for (byte[] packet : sendCommand.requestPackets) {
                 this.rightConnection.send(packet);
             }
@@ -114,7 +119,7 @@ public class ConnectionManager {
         return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
     }
 
-    public <T> void setOnResponse(Sides side, EvenOsEventListener<T> listener, BiConsumer<T, Sides> handler) {
+    public <T> void setOnResponse(EvenOsApi.Sides side, EvenOsEventListener<T> listener, BiConsumer<T, EvenOsApi.Sides> handler) {
         // Remove old entry if it exists
         responseHandlers.removeIf(entry ->
             entry.listener.equals(listener) && entry.side == side
@@ -137,13 +142,13 @@ public class ConnectionManager {
             commandQueue.remove(matching, side);
         }
 
-        for (Map.Entry<EvenOsEventListener<?>, BiConsumer<?, Sides>> entry : responseListeners.entrySet()) {
+        for (Map.Entry<EvenOsEventListener<?>, BiConsumer<?, EvenOsApi.Sides>> entry : responseListeners.entrySet()) {
             EvenOsEventListener<?> listener = entry.getKey();
-            if (listener.side == Sides.BOTH || listener.side == side) {
+            if (listener.side == EvenOsApi.Sides.BOTH || listener.side == side) {
                 if (listener.matches(data, side)) {
                     Object parsed = listener.parse(data, side);
                     @SuppressWarnings("unchecked")
-                    BiConsumer<Object, Sides> handler = (BiConsumer<Object, Sides>) entry.getValue();
+                    BiConsumer<Object, EvenOsApi.Sides> handler = (BiConsumer<Object, EvenOsApi.Sides>) entry.getValue();
                     handler.accept(parsed, side);
                     break;
                 }
@@ -155,17 +160,17 @@ public class ConnectionManager {
 }
 
 public abstract class EvenOsEventListener<T> {
-    public Sides side = Sides.BOTH; // default
-    public abstract boolean matches(byte[] data, Sides side);
-    public abstract T parse(byte[] data, Sides side);
+    public EvenOsApi.Sides side = EvenOsApi.Sides.BOTH; // default
+    public abstract boolean matches(byte[] data, EvenOsApi.Sides side);
+    public abstract T parse(byte[] data, EvenOsApi.Sides side);
 }
 
 public class ResponseHandler<T> {
-    public final Sides side;
+    public final EvenOsApi.Sides side;
     public final EvenOsEventListener<T> listener;
-    public final BiConsumer<T, Sides> handler;
+    public final BiConsumer<T, EvenOsApi.Sides> handler;
 
-    public ResponseHandler(Sides side, EvenOsEventListener<T> listener, BiConsumer<T, Sides> handler) {
+    public ResponseHandler(EvenOsApi.Sides side, EvenOsEventListener<T> listener, BiConsumer<T, EvenOsApi.Sides> handler) {
         this.side = side;
         this.listener = listener;
         this.handler = handler;

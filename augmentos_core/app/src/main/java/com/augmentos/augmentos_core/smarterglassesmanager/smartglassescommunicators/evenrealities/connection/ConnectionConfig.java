@@ -1,5 +1,7 @@
 package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection;
 
+import java.util.UUID;
+
 public class ConnectionConfig {
     public final UUID uartServiceUuid;
     public final UUID uartTxCharUuid;

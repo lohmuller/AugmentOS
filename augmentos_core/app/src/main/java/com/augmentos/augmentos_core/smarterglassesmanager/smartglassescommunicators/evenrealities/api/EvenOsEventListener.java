@@ -11,7 +11,7 @@ public interface EvenOsEventListener<T> {
      * @param side The side the event came from
      * @return true if the event matches
      */
-    boolean matches(byte[] data, Sides side);
+    boolean matches(byte[] data, EvenOsApi.Sides side);
 
     /**
      * Parse the event data
@@ -19,5 +19,5 @@ public interface EvenOsEventListener<T> {
      * @param side The side the event came from
      * @return The parsed data
      */
-    T parse(byte[] data, Sides side);
+    T parse(byte[] data, EvenOsApi.Sides side);
 } 
