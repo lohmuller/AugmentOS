@@ -1,7 +1,16 @@
+/**
+ * EvenOsBase defines the abstract API surface for interacting with Even Realities smart glasses firmware.
+ * It includes command definitions like brightness control, image/text transfer, system info queries, and gesture handlers.
+ * Subclasses like Even_Os_1_5_0 should implement these methods for specific firmware versions.
+ */
+
+package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api;
+
 import java.util.function.Function;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class EvenOsBase {
+
+public abstract class EvenOsApi {
 
     //Convert enum to class?
     public enum DashboardMode {
@@ -49,29 +58,4 @@ public abstract class EvenOsBase {
     Function<byte[], T> onTripleTap(Sides side);
     Function<byte[], T> onLongPress(Sides side);
 
-}
-
-
-public class EvenOsCommand {
-
-    public final byte[][] requestPackets;
-    public final byte[] responseHeader;
-    public final Sides sides;
-    public final Function<byte[], T> responseParser;
-    public final CompletableFuture<T> future = new CompletableFuture<>();
-
-    public enum Sides {
-        LEFT, RIGHT, BOTH, EITHER;
-    }
-
-    public EvenOsCommand(byte[][] requestPackets, byte[] responseHeader, Sides sides, Function<byte[], T> responseParser) {
-        this.requestPackets = requestPackets;
-        this.responseHeader = responseHeader;
-        this.sides = sides;
-        this.responseParser = responseParser;
-    }
-
-    public EvenOsCommand(byte[] singleRequest, byte[] responseHeader, Sides sides, Function<byte[], T> responseParser) {
-        this(new byte[][]{ singleRequest }, responseHeader, sides, responseParser);
-    }
 }

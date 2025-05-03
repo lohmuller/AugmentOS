@@ -1,3 +1,15 @@
+/**
+ * Implementation of EvenOsBase for Even Realities smart glasses (firmware 1.5.0).
+ * 
+ * This class defines supported commands with request structures, expected response headers,
+ * and response parsers. It abstracts BLE communication into a high-level API (e.g. brightness, 
+ * silent mode, image/text transfer).
+ * 
+ * Based on reverse-engineering of AugmentOS, the Even Realities DemoApp, and shared docs.
+ */
+
+package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api;
+
 import java.util.EnumMap;
 import java.util.Map;
 import java.nio.charset.StandardCharsets;
@@ -9,7 +21,7 @@ import java.nio.ByteBuffer;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
 
 
-public class Even_Os_1_5_0 implements EvenOsBase {
+public class Even_Os_1_5_0 implements EvenOsApi {
 
     /**
      * Set brightness

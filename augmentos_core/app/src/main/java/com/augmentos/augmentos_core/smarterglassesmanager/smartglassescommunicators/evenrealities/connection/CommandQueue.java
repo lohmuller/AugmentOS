@@ -1,6 +1,20 @@
+/**
+ * CommandQueue is responsible for managing pending commands for the Even Realities device,
+ * maintaining separate queues for LEFT and RIGHT connections.
+ *
+ * It ensures that only one command per side is active at a time, preventing overlapping
+ * commands with similar response headers, which could cause unexpected behavior during
+ * response parsing.
+ *
+ * The main goal is to avoid command collisions by validating whether a command can safely
+ * be added to the queue (`isAvailable`) before sending it, based on its expected response signature.
+ */
+
+package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection;
+
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.EvenOsCommand;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.commandEvenOsCommand;
 
 public class CommandQueue {
 

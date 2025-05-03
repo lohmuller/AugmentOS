@@ -1,3 +1,19 @@
+/**
+ * Connection is a generic BLE (Bluetooth Low Energy) manager for handling GATT-based communication
+ * with a Bluetooth device, such as smart glasses.
+ *
+ * It abstracts the initialization, MTU negotiation, service discovery, and data transmission
+ * via TX and RX characteristics. It also provides listener support for receiving data asynchronously.
+ *
+ * The class ensures the connection is properly initialized before usage, and automatically handles
+ * reconnection, characteristic notification setup, and safe teardown.
+ *
+ * This structure allows external components (like ConnectionManager or G1Manager) to interface
+ * with the BLE device in a simplified and robust way.
+ */
+
+package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection;
+
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -11,6 +27,9 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
+
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.ConnectionConfig;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.exception.BleInitializationException;
 
 public class Connection {
 
@@ -73,7 +92,7 @@ public class Connection {
         }
     };
 
-    public Connection(@NonNull Context context, @NonNull BluetoothDevice device, @NonNull BleConfig config) {
+    public Connection(@NonNull Context context, @NonNull BluetoothDevice device, @NonNull ConnectionConfig config) {
         this.context = context.getApplicationContext();
         this.device = device;
         this.gatt = device.connectGatt(context, false, internalCallback);
@@ -178,25 +197,5 @@ public class Connection {
 
     public interface OnRxDataListener {
         void onDataReceived(byte[] data);
-    }
-}
-
-public class BleInitializationException extends RuntimeException {
-    public BleInitializationException(String message) {
-        super(message);
-    }
-}
-
-public class BleConfig {
-    public final UUID uartServiceUuid;
-    public final UUID uartTxCharUuid;
-    public final UUID uartRxCharUuid;
-    public final int mtu;
-
-    public BleConfig(UUID uartServiceUuid, UUID uartTxCharUuid, UUID uartRxCharUuid, int mtu) {
-        this.uartServiceUuid = uartServiceUuid;
-        this.uartTxCharUuid = uartTxCharUuid;
-        this.uartRxCharUuid = uartRxCharUuid;
-        this.mtu = mtu;
     }
 }

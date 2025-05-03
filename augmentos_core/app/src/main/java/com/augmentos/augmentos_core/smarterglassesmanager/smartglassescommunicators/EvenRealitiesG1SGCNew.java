@@ -1,15 +1,16 @@
 package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities;
 
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.EvenOsConnection;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsFirmwareFactory;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.connection.ConnectionManager;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsApi;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOs_1_5_0;
+
 
 import java.util.concurrent.CompletableFuture;
 import org.greenrobot.eventbus.EventBus;
 
 public class EvenRealitiesG1SGCNew extends SmartGlassesCommunicator {
 
-    private final EvenOsBase evenOsApi;
+    private final EvenOsApi evenOsApi;
     private final ConnectionManager connectionManager;
     private ScheduledFuture<?> batteryMonitoringFuture;
 
