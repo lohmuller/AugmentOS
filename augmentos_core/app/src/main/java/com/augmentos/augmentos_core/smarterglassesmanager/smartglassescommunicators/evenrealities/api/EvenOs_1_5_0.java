@@ -17,9 +17,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.zip.CRC32;
 import java.nio.ByteBuffer;
-
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
-
+import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 public class Even_Os_1_5_0 implements EvenOsApi {
 

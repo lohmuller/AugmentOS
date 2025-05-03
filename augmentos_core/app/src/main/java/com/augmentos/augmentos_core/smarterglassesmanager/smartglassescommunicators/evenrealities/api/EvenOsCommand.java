@@ -1,6 +1,9 @@
 package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api;
 
-public class EvenOsCommand {
+import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
+
+public class EvenOsCommand<T> {
 
     public final byte[][] requestPackets;
     public final byte[] responseHeader;

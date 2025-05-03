@@ -14,7 +14,7 @@ package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunica
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.commandEvenOsCommand;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsCommand;
 
 public class CommandQueue {
 

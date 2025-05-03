@@ -28,6 +28,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
+import java.util.UUID;
+
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.ConnectionConfig;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.exception.BleInitializationException;
 
@@ -44,6 +46,7 @@ public class Connection {
     private UUID uartServiceUuid;
     private UUID uartTxCharUuid;
     private UUID uartRxCharUuid;
+    private UUID clientCharacteristicConfigUuid;
     private int mtu;
 
     private static final String TAG = "BLE";
@@ -96,6 +99,7 @@ public class Connection {
         this.context = context.getApplicationContext();
         this.device = device;
         this.gatt = device.connectGatt(context, false, internalCallback);
+        this.clientCharacteristicConfigUuid = config.clientCharacteristicConfigUuid;
         this.uartServiceUuid = config.uartServiceUuid;
         this.uartTxCharUuid = config.uartTxCharUuid;
         this.uartRxCharUuid = config.uartRxCharUuid;

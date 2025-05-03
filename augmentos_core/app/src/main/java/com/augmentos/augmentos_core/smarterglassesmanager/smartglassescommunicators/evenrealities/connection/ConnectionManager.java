@@ -19,11 +19,16 @@ package com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunica
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
+import android.content.Context;
+
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsCommand;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.EvenOsEventListener;
+import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.api.Sides;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.ConnectionConfig;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.connection.Connection;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsBase;
-import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.EvenOsCommand;
 import com.augmentos.augmentos_core.smarterglassesmanager.smartglassescommunicators.evenrealities.evenos.connection.CommandQueue;
 
 
@@ -45,8 +50,9 @@ public class ConnectionManager {
         UartServiceUuid = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
         uartTxCharUuid = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
         uartRxCharUuid = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
+        clientCharacteristicConfigUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
         int mtu = 512;
-        ConnectionConfig config = new ConnectionConfig(UartServiceUuid, uartTxCharUuid, uartRxCharUuid, mtu);
+        ConnectionConfig config = new ConnectionConfig(UartServiceUuid, uartTxCharUuid, uartRxCharUuid, clientCharacteristicConfigUuid, mtu);
 
         this.leftConnection = new Connection(context, smartGlassesDevice.getLeftDevice(), config);
         this.rightConnection = new Connection(context, smartGlassesDevice.getRightDevice(), config);
